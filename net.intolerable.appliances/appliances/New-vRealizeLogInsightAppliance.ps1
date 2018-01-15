@@ -99,13 +99,29 @@ Function New-vRealizeLogInsightAppliance {
 			$dnsservers = @("10.10.1.11","10.10.1.12")
 			Connect-VIServer vCenter.example.com
 			$VMHost = Get-VMHost host1.example.com
-			New-vRealizeLogInsightAppliance -OVFPath $ova -Name "LogInsight1" -VMHost $VMHost -Network "admin-network" -IPAddress "10.10.10.11" -SubnetMask "255.255.255.0" -Gateway "10.10.10.1" -DNSServers $dnsservers -Domain example.com -PowerOn
+
+            $sApp = @{
+                OVFPath = $ova
+                Name = "LogInsight1"
+                VMHost = $VMHost 
+                Network = "LAN"
+                IPAddress = "10.10.1.20"
+                SubnetMask = "255.255.255.0"
+                Gateway = "10.10.1.1"
+                DNSServers = $dnsservers
+                Domain = 'example.com'
+                PowerOn = $false
+                DeploymentSize = 'small'
+                RootPassword = 'VMware1!'
+                WhatIf = $true
+            }
+            New-vRealizeLogInsightAppliance @sApp
 
    			Description
    			-----------
 			Deploy the vRealize Log Insight Appliance with static IP settings and power it on after the import finishes
 	#>
-	[CmdletBinding(DefaultParameterSetName="Static")]
+	[CmdletBinding(SupportsShouldProcess=$true,DefaultParameterSetName="Static")]
 	[OutputType('VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine')]
 	Param (
 		[Alias("OVA","OVF")]
@@ -212,7 +228,7 @@ Function New-vRealizeLogInsightAppliance {
 
 			# Setting Basics Up
 			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Configuring Basic Values"
-			$ovfconfig.DeploymentOption.value = $DeploymentSize.toLower(); # Value for the deployment size
+			$ovfconfig.DeploymentOption.Value = $DeploymentSize.toLower(); # Value for the deployment size
 			if ($RootPassword) { $ovfconfig.vm.rootpw.value = $RootPassword } # Setting the provided password for the root account
 			if ($SSHKey) { $ovfconfig.vm.sshkey.value = $SSHKey } # Setting the provided SSH Public Key			
 
@@ -222,13 +238,13 @@ Function New-vRealizeLogInsightAppliance {
 			$ovfconfig.NetworkMapping.Network_1.value = $Network; # vSphere Portgroup Network Mapping
 
 			if ($PsCmdlet.ParameterSetName -eq "Static") {
-				$ovfconfig.vami.$vami.ip0.value = $IPAddress
-				$ovfconfig.vami.$vami.netmask0.value = $SubnetMask
-				$ovfconfig.vami.$vami.gateway.value = $Gateway
-				$ovfconfig.vami.$vami.hostname.value = $FQDN
-				$ovfconfig.vami.$vami.DNS.value = $DNSServers -join ","
-				if ($DNSSearchPath) { $ovfconfig.vami.$vami.searchpath.value = $DNSSearchPath -join "," }
-				if ($Domain) { $ovfconfig.vami.$vami.domain.value = $Domain }
+				$ovfconfig.vami.$ApplianceType.ip0.value = $IPAddress
+				$ovfconfig.vami.$ApplianceType.netmask0.value = $SubnetMask
+				$ovfconfig.vami.$ApplianceType.gateway.value = $Gateway
+				$ovfconfig.vami.$ApplianceType.hostname.value = $FQDN
+				$ovfconfig.vami.$ApplianceType.DNS.value = $DNSServers -join ","
+				if ($DNSSearchPath) { $ovfconfig.vami.$ApplianceType.searchpath.value = $DNSSearchPath -join "," }
+				if ($Domain) { $ovfconfig.vami.$ApplianceType.domain.value = $Domain }
 			}
 
 			# Returning the OVF Configuration to the function
@@ -245,14 +261,16 @@ Function New-vRealizeLogInsightAppliance {
 		# Validating Components
 		$VMHost = Confirm-VMHost
 		$Gateway = Set-DefaultGateway
-		Confirm-BackingNetwork
+		Confirm-BackingNetwork -Network $Network
 		if (!$DHCP) { $FQDN = Confirm-DNS }
 
 		# Configuring the OVF Template and deploying the appliance
 		$ovfconfig = New-Configuration
 		#if ($ovfconfig) { $ovfconfig }
-		if ($ovfconfig) { Import-Appliance }
-		else { throw "an OVF configuration was not passed back into "}
+        if ($pscmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")){
+    		if ($ovfconfig) { Import-Appliance }
+	    	else { throw "an OVF configuration was not passed back into "}
+        }
 	}
 
 	catch { Write-Error $_ }
