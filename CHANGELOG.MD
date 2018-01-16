@@ -1,2 +1,10 @@
 # 0.5
-- Initial Commit
+* Initial Commit
+
+# 0.6
+* All appliance functions now export via manifest so auto-loading works!
+* Added support for `-WhatIf`
+* Added Photon OS appliance support
+* Updated help content to use splat parameter presentation
+* Started adding logging of things via `-Verbose` parameter
+* Added parameter inputs on most of the internal functions
