@@ -15,3 +15,6 @@ foreach ($appliance in $appliances) {
 	Write-Progress -Activity "Importing Virtual Appliance Wrappers" -Status $appliance.BaseName
 	. $appliance.FullName 
 }
+
+# Common error messages generated across all appliances; edit once!
+$noOvfConfiguration = "A generated OVF configuration was not passed back into the function; check the New-Configuration function for this appliance"

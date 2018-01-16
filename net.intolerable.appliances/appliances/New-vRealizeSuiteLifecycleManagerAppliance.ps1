@@ -31,7 +31,7 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
 
 			To locate a specific country code, you may take a look at this page: http://www.nationsonline.org/oneworld/country_code_list.htm
 
-			.Parameter VMHost
+		.Parameter VMHost
 			Specifies a host where you want to run the appliance.
 
 		.Parameter InventoryLocation
@@ -83,17 +83,61 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
 			Author: Steve Kaplan (steve@intolerable.net)
 
 		.Example
-	   		$ova = "c:\temp\vrealize-lcm.ova"
-			$dnsservers = @("10.10.1.11","10.10.1.12")
 			Connect-VIServer vCenter.example.com
-			$VMHost = Get-VMHost host1.example.com
-			New-vRealizeSuiteLifecycleManagerAppliance -OVFPath $ova -Name "vRSLCM1" -VMHost $VMHost -Network "admin-network" -IPAddress "10.10.10.11" -SubnetMask "255.255.255.0" -Gateway "10.10.10.1" -DNSServers $dnsservers -Domain example.com -PowerOn
+			
+			$config = @{
+				OVFPath = "c:\temp\vrealize-lcm.ova"
+				Name = "vRSLCM1"
+				EnableCEIP = $true
+				CertCommonName = "vrslcm1.example.com"
+				CertOrgName = "Example Corp"
+				CertOrgUnit = "Example Org"
+				CertCountryCode = "US"
+				VMHost = (Get-VMHost -Name "host1.example.com")
+				InventoryLocation = (Get-Folder -Type VM -Name "Appliances")
+				Network = "admin-network"
+				IPAddress = "10.10.10.11" 
+				SubnetMask = "255.255.255.0" 
+				Gateway = "10.10.10.1"
+				Domain = "example.com"
+				DNSServers = @("10.10.1.11","10.10.1.12")
+				ValidateDNSEntries = $true
+				PowerOn = $true
+				Verbose = $true
+			}
+
+			New-vRealizeSuiteLifecycleManagerAppliance @config
 
    			Description
    			-----------
-			Deploy the vRealize Suite Lifecycle Manager appliance with static IP settings and power it on after the import finishes
+			Deploy the vRealize Suite Lifecycle Manager appliance with static IP settings and power it on after the import finishes. 
+			In this example, the Verbose flag is being passed, so all OVF properties will be shown as part of the output
+
+		.Example
+			Connect-VIServer vCenter.example.com
+			
+			$config = @{
+				OVFPath = "c:\temp\vrealize-lcm.ova"
+				Name = "vRSLCM1"
+				EnableCEIP = $true
+				CertCommonName = "vrslcm1.example.com"
+				CertOrgName = "Example Corp"
+				CertOrgUnit = "Example Org"
+				CertCountryCode = "US"
+				VMHost = (Get-VMHost -Name "host1.example.com")
+				InventoryLocation = (Get-Folder -Type VM -Name "Appliances")
+				Network = "admin-network"
+				DHCP = $true
+				PowerOn = $false
+			}
+
+			New-vRealizeSuiteLifecycleManagerAppliance @config
+
+			Description
+			-----------
+			Deploy the vRealize Suite Lifecycle Manager appliance with DHCP settings and and do not power it on after the import finishes
 	#>
-	[CmdletBinding(DefaultParameterSetName="Static")]
+	[CmdletBinding(SupportsShouldProcess=$true,DefaultParameterSetName="Static")]
 	[OutputType('VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine')]
 	Param (
 		[Alias("OVA","OVF")]
@@ -130,7 +174,8 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
 		[Parameter(ParameterSetName="DHCP")]
         [Parameter(ParameterSetName="Static")]
 		[ValidateLength(2,2)]
-		[String]$CertCountryCode,
+		[ValidateSet("AD","AE","AF","AG","AI","AL","AM","AN","AO","AQ","AR","AS","AT","AU","AW","AX","AZ","BA","BB","BD","BE","BF","BG","BH","BI","BJ","BL","BM","BN","BO","BR","BS","BT","BV","BW","BY","BZ","CA","CC","CD","CF","CG","CH","CI","CK","CL","CM","CN","CO","CR","CU","CV","CX","CY","CZ","DE","DJ","DK","DM","DO","DZ","EC","EE","EG","EH","ER","ES","ET","FI","FJ","FK","FM","FO","FR","GA","GB","GD","GE","GF","GG","GH","GI","GL","GM","GN","GP","GQ","GR","GS","GT","GU","GW","GY","HK","HM","HN","HR","HT","HU","ID","IE","IL","IM","IN","IO","IQ","IR","IS","IT","JE","JM","JO","JP","KE","KG","KH","KI","KM","KN","KP","KR","KW","KY","KZ","LA","LB","LC","LI","LK","LR","LS","LT","LU","LV","LY","MA","MC","MD","ME","MF","MG","MH","MK","ML","MM","MN","MO","MP","MQ","MR","MS","MT","MU","MV","MW","MX","MY","MZ","NA","NC","NE","NF","NG","NI","NL","NO","NP","NR","NU","NZ","OM","PA","PE","PF","PG","PH","PK","PL","PM","PN","PR","PS","PT","PW","PY","QA","RE","RO","RS","RU","RW","SA","SB","SC","SD","SE","SG","SH","SI","SJ","SK","SL","SM","SN","SO","SR","SS","ST","SV","SY","SZ","TC","TD","TF","TG","TH","TJ","TK","TL","TM","TN","TO","TR","TT","TV","TW","TZ","UA","UG","UM","US","UY","UZ","VA","VC","VE","VG","VN","VU","WF","WS","YE","YT","ZA","ZM","ZW")]
+		[String]$CertCountryCode = "US",
 
 		# Infrastructure Parameters
 		[Parameter(ParameterSetName="DHCP")]
@@ -232,7 +277,10 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
 				$ovfconfig.vami.$ApplianceType.DNS.value = $DNSServers -join ","
 				$ovfconfig.vami.$ApplianceType.domain.value = $Domain
 				if ($DNSSearchPath) { $ovfconfig.vami.$ApplianceType.searchpath.value = $DNSSearchPath -join "," }
-			}
+            }
+
+            # Verbose logging passthrough
+            Write-OVFValues -ovfconfig $ovfconfig -Verbose:$VerbosePreference
 
 			# Returning the OVF Configuration to the function
 			$ovfconfig
@@ -246,15 +294,35 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
 		$Activity = "Deploying a new vRealize Suite Lifecycle Manager Appliance"
 
 		# Validating Components
-		$VMHost = Confirm-VMHost
-		$Gateway = Set-DefaultGateway
-		Confirm-BackingNetwork
-		if ($PsCmdlet.ParameterSetName -eq "Static") { $FQDN = Confirm-DNS }
+        $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
+        Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
+        $Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
+		if ($PsCmdlet.ParameterSetName -eq "Static") {
+			# Adding all of the required parameters to validate DNS things
+			$validate = @{
+				Name = $Name
+				Domain = $IPAddress
+				DNSServers = $DNSServers
+                Verbose = $VerbosePreference
+			}
+
+			if ($Domain) { $validate.Domain = $Domain }
+			if ($FQDN) { $validate.FQDN = $FQDN }
+
+			# Confirming DNS Settings
+			$FQDN = Confirm-DNS @validate
+		}
 
 		# Configuring the OVF Template and deploying the appliance
 		$ovfconfig = New-Configuration
-		if ($ovfconfig) { Import-Appliance }
-		else { throw "an OVF configuration was not passed back into "}
+		if ($ovfconfig) {
+			if ($PsCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) { Import-Appliance -Verbose:$VerbosePreference }
+			else { 
+				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
+			}
+		}
+		
+		else { throw $noOvfConfiguration }
 	}
 
 	catch { Write-Error $_ }
