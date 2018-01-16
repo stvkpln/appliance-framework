@@ -147,25 +147,25 @@ Function New-vRealizeLogInsightAppliance {
 	[CmdletBinding(SupportsShouldProcess=$true,DefaultParameterSetName="Static")]
 	[OutputType('VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine')]
 	Param (
-		[Alias("OVA","OVF")]
-		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
 		[Parameter(Mandatory=$true,ParameterSetName="Static")]
+		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
+		[Alias("OVA","OVF")]
 		[ValidateScript( { Confirm-FilePath $_ } )][
 		System.IO.FileInfo]$OVFPath,
 
-		[Alias("Size","DeploymentType")]
-		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
 		[Parameter(Mandatory=$true,ParameterSetName="Static")]
+		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
+		[Alias("Size","DeploymentType")]
 		[ValidateSet("xsmall","small","medium","large")]
 		[String]$DeploymentSize = "small",
 		
-		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
 		[Parameter(Mandatory=$true,ParameterSetName="Static")]
+		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
 		[ValidateNotNullOrEmpty()]
 		[String]$Name,
 
-		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
 		[Parameter(Mandatory=$true,ParameterSetName="Static")]
+		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
 		[ValidateNotNullOrEmpty()]
 		[String]$RootPassword,
 		
@@ -173,34 +173,34 @@ Function New-vRealizeLogInsightAppliance {
 		[String]$SSHKey,
 
 		# Infrastructure Parameters
-		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
 		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]$VMHost,
 
-		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
 		[VMware.VimAutomation.ViCore.Types.V1.Inventory.Folder]$InventoryLocation,
 
-		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
 		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]$Location,
 
-		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
 		[VMware.VimAutomation.ViCore.Types.V1.DatastoreManagement.Datastore]$Datastore,
 
-		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
 		[ValidateSet("Thick","Thick2GB","Thin","Thin2GB","EagerZeroedThick")]
 		[String]$DiskFormat = "thin",
 
 		# Networking
-		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
 		[Parameter(Mandatory=$true,ParameterSetName="Static")]
+		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
 		[String]$Network,
 
-		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
 		[ValidateSet("IPv4","IPv6")]
 		[String]$IPProtocol = "IPv4",
 
@@ -237,9 +237,14 @@ Function New-vRealizeLogInsightAppliance {
 		[bool]$ValidateDNSEntries = $true,
 
 		# Lifecycle Parameters
-		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
-		[Switch]$PowerOn 
+		[Parameter(ParameterSetName="DHCP")]
+		[Switch]$PowerOn,
+
+		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
+		[Switch]$NoClobber = $true
+
 	)
 
 	Function New-Configuration () {
@@ -292,13 +297,12 @@ Function New-vRealizeLogInsightAppliance {
 			# Adding all of the required parameters to validate DNS things
 			$validate = @{
 				Name = $Name
-				Domain = $IPAddress
+				Domain = $Domain
+                IPAddress = $IPAddress
 				DNSServers = $DNSServers
+                FQDN = $FQDN
                 Verbose = $VerbosePreference
 			}
-
-			if ($Domain) { $validate.Domain = $Domain }
-			if ($FQDN) { $validate.FQDN = $FQDN }
 
 			# Confirming DNS Settings
 			$FQDN = Confirm-DNS @validate
@@ -307,6 +311,16 @@ Function New-vRealizeLogInsightAppliance {
 		# Configuring the OVF Template and deploying the appliance
 		$ovfconfig = New-Configuration
 		if ($ovfconfig) {
+            $vm = Get-VM -Name $Name -ErrorAction SilentlyContinue
+            if($vm -and $NoClobber){
+                throw "There is already a VM with the name $($Name). To overwrite, set the NoClobber to $false"
+            }
+            elseif($vm){
+    			if ($PSCmdlet.ShouldProcess($Name, "Remove-VM")) {
+                    Remove-VM -VM $vm -DeletePermanently -Confirm:$false
+                }
+            }
+
 			if ($PSCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) { Import-Appliance -Verbose:$VerbosePreference }
 			else { 
 				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }

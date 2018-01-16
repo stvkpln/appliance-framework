@@ -1,6 +1,6 @@
 # OVA/OVF Appliance Import Framework
-  * Version: 0.5-BETA
-  * Last Update: 2018-01-14
+  * Version: 0.6-BETA
+  * Last Update: 2018-01-15
 
 ## General Information
 This module provides a framework to provide a normalized set of parameters to import virtual appliances in OVA or OVF formats into VMware vSphere environments via PowerCLI. In addition to normalized inputs, this framework provides validation of specific infrastructure actions to reduce the possibility of an error:
