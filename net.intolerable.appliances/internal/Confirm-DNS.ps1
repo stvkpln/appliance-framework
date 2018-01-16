@@ -8,6 +8,21 @@
 		#2 and #3 will only occur *if* the -ValidateDNSEntries switch is passed via the appliance wrapper function
 #>
 Function Confirm-DNS {
+	Param (
+        [ValidateNotNullOrEmpty()]
+		[String]$Name,
+
+        [String]$Domain,
+        [String]$FQDN,
+
+		[ValidateScript( {$_ -match [IPAddress]$_ })]
+        [String]$IPAddress,
+
+		[ValidateCount(1,2)]
+        [ValidateScript( {$_ -match [IPAddress]$_ })]
+        [String[]]$DNSServers
+	)
+	
 	$Status = "DNS Validation"
 	# Checking / Setting the FQDN
 	if (!$FQDN) {

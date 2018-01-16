@@ -6,6 +6,10 @@
 		3) If neither -VMHost or -Location are provided.... an exception will be generated
 #>
 Function Confirm-VMHost {
+	Param (
+		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]$VMHost,
+		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]$Location
+	)
 	if (!$VMHost -and !$Location) { throw "No infrastructure resource was provided. Please specify either a VMHost (-VMHost) or Infrastructure resource (-Location) to provision the virtual appliance to." }
 	
 	if ($VMHost) { $VMHost }

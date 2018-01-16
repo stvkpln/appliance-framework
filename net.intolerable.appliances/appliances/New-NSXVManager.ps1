@@ -75,17 +75,36 @@ Function New-NSXVManager {
 			Author: Steve Kaplan (steve@intolerable.net)
 
 		.Example
-			$ova = "c:\temp\nsx-v.ova"
-			$dnsservers = @("10.10.1.11","10.10.1.12")
 			Connect-VIServer vCenter.example.com
-			$VMHost = Get-VMHost host1.example.com
-			New-NSXVManager -OVFPath $ova -Name "NSX1" -VMHost $VMHost -Network "admin-network" -IPAddress "10.10.10.11" -SubnetMask "255.255.255.0" -Gateway "10.10.10.1" -DNSServers $dnsservers -Domain example.com -PowerOn
+			
+			$config = @{
+				OVFPath = "c:\temp\nsx-v.ova"
+				Name = "NSXVM1"
+				CLIPassword = "VMware1!"
+				EnableSSH = $true
+				EnableCEIP = $true
+				VMHost = (Get-VMHost -Name "host1.example.com")
+				InventoryLocation = (Get-Folder -Type VM -Name "Appliances")
+				Network = "admin-network"
+				IPAddress = "10.10.10.11" 
+				SubnetMask = "255.255.255.0" 
+				Gateway = "10.10.10.1"
+				Domain = "example.com"
+				DNSServers = @("10.10.1.11","10.10.1.12")
+				ValidateDNSEntries = $true
+				NTPServers = @("0.north-america.pool.ntp.org", "1.north-america.pool.ntp.org")
+				PowerOn = $true
+				Verbose = $true
+			}
+
+			New-NSXVManager @config
 
 			Description
 			-----------
-			Deploy the NSX-V Manager Appliance with static IP settings and power it on after the import finishes
+			Deploy the NSX-V Manager appliance with static IP settings and power it on after the import finishes. 
+			In this example, the Verbose flag is being passed, so all OVF properties will be shown as part of the output
 	#>
-	[CmdletBinding()]
+	[CmdletBinding(SupportsShouldProcess=$true)]
 	[OutputType('VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine')]	
 	Param (
 		[Alias("OVA","OVF")]
@@ -175,7 +194,10 @@ Function New-NSXVManager {
 			$ovfconfig.Common.vsm_hostname.value = $FQDN
 			$ovfconfig.Common.vsm_dns1_0.value = $DNSServers -join ","
 			if ($Domain) { $ovfconfig.Common.vsm_domain_0.value = $Domain }
-			$ovfconfig.Common.vsm_ntp_0.value = $NTPServers -join ","
+            $ovfconfig.Common.vsm_ntp_0.value = $NTPServers -join ","
+
+            # Verbose logging passthrough
+            Write-OVFValues -ovfconfig $ovfconfig -Verbose:$VerbosePreference
 
 			# Returning the OVF Configuration to the function
 			$ovfconfig
@@ -189,15 +211,35 @@ Function New-NSXVManager {
 		$Activity = "Deploying a new NSX-V Manager"
 
 		# Validating Components
-		$VMHost = Confirm-VMHost
-		Confirm-BackingNetwork
-		$Gateway = Set-DefaultGateway
-		$FQDN = Confirm-DNS
+        $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
+        Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
+        $Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
+		if ($PsCmdlet.ParameterSetName -eq "Static" -and $ValidateDNSEntries -eq $true) {
+			# Adding all of the required parameters to validate DNS things
+			$validate = @{
+				Name = $Name
+				Domain = $IPAddress
+				DNSServers = $DNSServers
+				Verbose = $VerbosePreference
+			}
+			
+			if ($Domain) { $validate.Domain = $Domain }
+			if ($FQDN) { $validate.FQDN = $FQDN }
+			
+			# Confirming DNS Settings
+			$FQDN = Confirm-DNS @validate
+		}
 
 		# Configuring the OVF Template and deploying the appliance
 		$ovfconfig = New-Configuration
-		if ($ovfconfig) { Import-Appliance }
-		else { throw "an OVF configuration was not passed back into "}
+		if ($ovfconfig) {
+			if ($PsCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) { Import-Appliance -Verbose:$VerbosePreference }
+			else { 
+				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
+			}
+		}
+		
+		else { throw $noOvfConfiguration }
 	}
 
 	catch { Write-Error $_ }

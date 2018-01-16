@@ -17,12 +17,10 @@ Function Import-Appliance {
 	if ($Datastore) { $import_params.add("Datastore",$Datastore) } 
 	if ($InventoryLocation) { $import_params.add("InventoryLocation",$InventoryLocation) }
 	if ($Location) { $import_params.add("Location",$Location) }
-	if ($RunAsync) { $import_params.add("RunAsync",$RunAsync) }
-	if ($WhatIf) { $import_params.add("WhatIf",$WhatIf) }
 
 	# Deploy the OVF/OVA with the config parameters
 	Write-Progress -Activity $Activity
 	$appliance = Import-VApp @import_params
 	if ($PowerOn) { Start-VM -VM $appliance }
-	else { $appliance }
+	else { Get-VM -Name $Name }
 }

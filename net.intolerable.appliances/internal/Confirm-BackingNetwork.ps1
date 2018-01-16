@@ -15,10 +15,10 @@ Function Confirm-BackingNetwork {
     	Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Checking vSphere Distributed Portgroups"
 
         Try{
-            Get-VirtualPortGroup -Name $Network -VMHsot $VMHost -ErrorAction Stop
+            Get-VirtualPortGroup -Name $Network -VMHost $VMHost -ErrorAction Stop > $null
         }
         Catch{
-    	    throw "Network name '$($network)' not found, check and confirm that this portgroup exists on the connected vCenter Server"
+    	    throw "Network name '$($Network)' not found, check and confirm that this portgroup exists on the connected vCenter Server"
         }
     }
 }

@@ -73,17 +73,55 @@ Function New-vRealizeAutomationAppliance {
 			Author: Steve Kaplan (steve@intolerable.net)
 
 		.Example
-			$ova = "c:\temp\vrealize-automation.ova"
-			$dnsservers = @("10.10.1.11","10.10.1.12")
 			Connect-VIServer vCenter.example.com
-			$VMHost = Get-VMHost host1.example.com
-			New-vRealizeAutomationAppliance -OVFPath $ova -Name "vRA1" -VMHost $VMHost -Network "admin-network" -IPAddress "10.10.10.11" -SubnetMask "255.255.255.0" -Gateway "10.10.10.1" -DNSServers $dnsservers -Domain example.com -PowerOn
+			
+			$config = @{
+				OVFPath = "c:\temp\vrealize-automation.ova"
+				Name = "vRA1"
+				RootPassword = "VMware1!"
+				EnableSSH = $true
+				VMHost = (Get-VMHost -Name "host1.example.com")
+				InventoryLocation = (Get-Folder -Type VM -Name "Appliances")
+				Network = "admin-network"
+				IPAddress = "10.10.10.11" 
+				SubnetMask = "255.255.255.0" 
+				Gateway = "10.10.10.1"
+				Domain = "example.com"
+				DNSServers = @("10.10.1.11","10.10.1.12")
+				ValidateDNSEntries = $true
+				PowerOn = $true
+				Verbose = $true
+			}
+
+			New-vRealizeAutomationAppliance @config
 
 			Description
 			-----------
-			Deploy the vRealize Automation appliance with static IP settings and power it on after the import finishes
+			Deploy the vRealize Automation appliance with static IP settings and power it on after the import finishes. 
+			In this example, the Verbose flag is being passed, so all OVF properties will be shown as part of the output
+
+		.Example
+			Connect-VIServer vCenter.example.com
+			
+			$config = @{
+				OVFPath = "c:\temp\vrealize-automation.ova"
+				Name = "vRA1"
+				RootPassword = "VMware1!"
+				EnableSSH = $true
+				VMHost = (Get-VMHost -Name "host1.example.com")
+				InventoryLocation = (Get-Folder -Type VM -Name "Appliances")
+				Network = "admin-network"
+				DHCP = $true
+				PowerOn = $false
+			}
+
+			New-vRealizeAutomationAppliance @config
+
+			Description
+			-----------
+			Deploy the vRealize Automation appliance with DHCP settings and and do not power it on after the import finishes
 	#>
-	[CmdletBinding(DefaultParameterSetName="Static")]
+	[CmdletBinding(SupportsShouldProcess=$true,DefaultParameterSetName="Static")]
 	[OutputType('VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine')]
 	Param (
 		[Alias("OVA","OVF")]
@@ -201,7 +239,10 @@ Function New-vRealizeAutomationAppliance {
 				$ovfconfig.vami.$ApplianceType.DNS.value = $DNSServers -join ","
 				if ($Domain) { $ovfconfig.vami.$ApplianceType.domain.value = $Domain }
 				if ($DNSSearchPath) { $ovfconfig.vami.$ApplianceType.searchpath.value = $DNSSearchPath -join "," }
-			}
+            }
+
+            # Verbose logging passthrough
+            Write-OVFValues -ovfconfig $ovfconfig -Verbose:$VerbosePreference
 
 			# Returning the OVF Configuration to the function
 			$ovfconfig
@@ -215,15 +256,34 @@ Function New-vRealizeAutomationAppliance {
 		$Activity = "Deploying a new vRealize Automation Appliance"
 
 		# Validating Components
-		$VMHost = Confirm-VMHost
-		Confirm-BackingNetwork
-		$Gateway = Set-DefaultGateway
-		if ($PsCmdlet.ParameterSetName -eq "Static") { $FQDN = Confirm-DNS }
+        $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
+        Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
+        $Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
+		if ($PsCmdlet.ParameterSetName -eq "Static" -and $ValidateDNSEntries -eq $true) {
+			# Adding all of the required parameters to validate DNS things
+			$validate = @{
+				Name = $Name
+				Domain = $IPAddress
+				DNSServers = $DNSServers
+			}
+
+			if ($Domain) { $validate.Domain = $Domain }
+			if ($FQDN) { $validate.FQDN = $FQDN }
+
+			# Confirming DNS Settings
+			$FQDN = Confirm-DNS @validate
+		}
 
 		# Configuring the OVF Template and deploying the appliance
 		$ovfconfig = New-Configuration
-		if ($ovfconfig) { Import-Appliance }
-		else { throw "an OVF configuration was not passed back into "}
+		if ($ovfconfig) {
+			if ($PsCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) { Import-Appliance -Verbose:$VerbosePreference }
+			else { 
+				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
+			}
+		}
+		
+		else { throw $noOvfConfiguration }
 	}
 
 	catch { Write-Error $_ }

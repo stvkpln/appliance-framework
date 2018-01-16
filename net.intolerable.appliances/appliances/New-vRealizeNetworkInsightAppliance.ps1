@@ -89,28 +89,70 @@ Function New-vRealizeNetworkInsightAppliance {
 			Author: Steve Kaplan (steve@intolerable.net)
 
 		.Example
-			$ova = "c:\temp\vrealize-network-insight-platform.ova"
-			$dnsservers = @("10.10.1.11","10.10.1.12")
 			Connect-VIServer vCenter.example.com
-			$VMHost = Get-VMHost host1.example.com
-			New-vRealizeNetworkInsightAppliance -OVFPath $ova -Type "Platform" -Name "vRNI1" -VMHost $VMHost -Network "admin-network" -IPAddress "10.10.10.11" -SubnetMask "255.255.255.0" -Gateway "10.10.10.1" -DNSServers $dnsservers -Domain example.com -PowerOn
+			
+			$config = @{
+				OVFPath = "c:\temp\vrealize-network-insight-platform.ova"
+				Type = "Platform"
+				DeploymentSie = "medium"
+				Name = "vRNI1"
+				AllowHealthTelemetry = $true
+				VMHost = (Get-VMHost -Name "host1.example.com")
+				InventoryLocation = (Get-Folder -Type VM -Name "Appliances")
+				Network = "admin-network"
+				IPAddress = "10.10.10.11" 
+				SubnetMask = "255.255.255.0" 
+				Gateway = "10.10.10.1"
+				Domain = "example.com"
+				DNSServers = @("10.10.1.11","10.10.1.12")
+				ValidateDNSEntries = $true
+				NTPServers = 
+				ProxyIP = "10.10.5.12"
+				ProxyPort = "8080"
+				PowerOn = $true
+				Verbose = $true
+			}
+
+			New-vRealizeNetworkInsightAppliance @config
 
 			Description
 			-----------
-			Deploy the vRealize Network Insight Platform appliance with static IP settings and power it on after the import finishes
+			Deploy the vRealize Network Insight Platform appliance with static IP settings and power it on after the import finishes. 
+			In this example, the Verbose flag is being passed, so all OVF properties will be shown as part of the output
 
 		.Example
-			$ova = "c:\temp\vrealize-network-insight-proxy.ova"
-			$dnsservers = @("10.10.1.11","10.10.1.12")
 			Connect-VIServer vCenter.example.com
-			$VMHost = Get-VMHost host1.example.com
-			New-vRealizeNetworkInsightAppliance -OVFPath $ova -Type "Proxy" -Name "vRNI2" -VMHost $VMHost -Network "admin-network" -IPAddress "10.10.10.12" -SubnetMask "255.255.255.0" -Gateway "10.10.10.1" -DNSServers $dnsservers -Domain example.com ProxySharedSecret <proxy-key> -PowerOn
+			
+			$config = @{
+				OVFPath = "c:\temp\vrealize-network-insight-proxy.ova"
+				Type = "Proxy"
+				DeploymentSie = "medium"
+				Name = "vRNI2"
+				AllowHealthTelemetry = $true
+				VMHost = (Get-VMHost -Name "host1.example.com")
+				InventoryLocation = (Get-Folder -Type VM -Name "Appliances")
+				Network = "admin-network"
+				IPAddress = "10.10.10.12" 
+				SubnetMask = "255.255.255.0" 
+				Gateway = "10.10.10.1"
+				Domain = "example.com"
+				DNSServers = @("10.10.1.11","10.10.1.12")
+				ValidateDNSEntries = $true
+				NTPServers = 
+				ProxyIP = "10.10.5.12"
+				ProxyPort = "8080"
+				PowerOn = $true
+				Verbose = $true
+			}
+
+			New-vRealizeNetworkInsightAppliance @config
 
 			Description
 			-----------
-			Deploy the vRealize Network Insight Proxy appliance with static IP settings and power it on after the import finishes
+			Deploy the vRealize Network Insight Proxy appliance with static IP settings and power it on after the import finishes. 
+			In this example, the Verbose flag is being passed, so all OVF properties will be shown as part of the output
 	#>
-	[CmdletBinding(DefaultParameterSetName="Platform")]
+	[CmdletBinding(SupportsShouldProcess=$true,DefaultParameterSetName="Platform")]
 	[OutputType('VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine')]
 	Param (
 		[Alias("OVA", "OVF")]
@@ -241,7 +283,10 @@ Function New-vRealizeNetworkInsightAppliance {
 			$ovfconfig.Common.NTP.value = $NTPServers -join ","
 			$ovfconfig.Common.Web_Proxy_IP.value = $ProxyIP
 			$ovfconfig.Common.Web_Proxy_Port.value = $ProxyPort
-			$ovfconfig.Common.Proxy_Shared_Secret 
+            if ($Type = "Proxy") { $ovfconfig.Common.Proxy_Shared_Secret.value = $ProxySharedSecret }
+
+            # Verbose logging passthrough
+            Write-OVFValues -ovfconfig $ovfconfig -Verbose:$VerbosePreference
 
 			# Returning the OVF Configuration to the function
 			$ovfconfig
@@ -255,16 +300,36 @@ Function New-vRealizeNetworkInsightAppliance {
 		$Activity = "Deploying a new vRealize Network Insight appliance"
 		
 		# Validating Components
-		$VMHost = Confirm-VMHost
-		Confirm-BackingNetwork
-		$Gateway = Set-DefaultGateway
-		$FQDN = Confirm-DNS
+        $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
+        Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
+        $Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
+		if ($PsCmdlet.ParameterSetName -eq "Static" -and $ValidateDNSEntries -eq $true) {
+			# Adding all of the required parameters to validate DNS things
+			$validate = @{
+				Name = $Name
+				Domain = $IPAddress
+				DNSServers = $DNSServers
+                Verbose = $VerbosePreference
+			}
+
+			if ($Domain) { $validate.Domain = $Domain }
+			if ($FQDN) { $validate.FQDN = $FQDN }
+
+			# Confirming DNS Settings
+			$FQDN = Confirm-DNS @validate
+		}
 
 		# Configuring the OVF Template and deploying the appliance
 		Write-Host $FQDN
 		$ovfconfig = New-Configuration
-		if ($ovfconfig) { Import-Appliance }
-		else { throw "an OVF configuration was not passed back into "}
+		if ($ovfconfig) {
+			if ($PsCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) { Import-Appliance -Verbose:$VerbosePreference }
+			else { 
+				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
+			}
+		}
+		
+		else { throw $noOvfConfiguration }
 	}
 
 	catch { Write-Error $_ }
