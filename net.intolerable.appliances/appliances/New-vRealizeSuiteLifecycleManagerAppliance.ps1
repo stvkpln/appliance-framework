@@ -79,8 +79,13 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
 		.Parameter PowerOn
 			Specifies whether to power on the imported appliance once the import completes.
 
+		.Parameter NoClobber
+			Indicates that the function will not remove and replace an existing virtual machine. By default, if a virtual machine with the specifies name exists, the function will fail. If setting this value to 'False', the existing virtual machine will be stopped and removed from the infrastructure permanently.
+			
 		.Notes
 			Author: Steve Kaplan (steve@intolerable.net)
+			Version History:
+				- 1.0: Initial release
 
 		.Example
 			Connect-VIServer vCenter.example.com
@@ -108,8 +113,8 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
 
 			New-vRealizeSuiteLifecycleManagerAppliance @config
 
-   			Description
-   			-----------
+			Description
+			-----------
 			Deploy the vRealize Suite Lifecycle Manager appliance with static IP settings and power it on after the import finishes. 
 			In this example, the Verbose flag is being passed, so all OVF properties will be shown as part of the output
 
@@ -147,66 +152,66 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
 
 		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
 		[Parameter(Mandatory=$true,ParameterSetName="Static")]
-        [ValidateNotNullOrEmpty()]
+		[ValidateNotNullOrEmpty()]
 		[String]$Name,
 
 		[Parameter(ParameterSetName="DHCP")]
-        [Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="Static")]
 		[bool]$EnableCEIP,
 
 		# SSL Certificate Parameters
 		[Alias("CommonName","CN")]
 		[Parameter(ParameterSetName="DHCP")]
-        [Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="Static")]
 		[String]$CertCommonName,
 
 		[Alias("OrgName","Org")]
 		[Parameter(ParameterSetName="DHCP")]
-        [Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="Static")]
 		[String]$CertOrgName,
 
 		[Alias("OU","OrgUnit")]
 		[Parameter(ParameterSetName="DHCP")]
-        [Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="Static")]
 		[String]$CertOrgUnit,
 
 		[Alias("Country","CountryCode")]
 		[Parameter(ParameterSetName="DHCP")]
-        [Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="Static")]
 		[ValidateLength(2,2)]
 		[ValidateSet("AD","AE","AF","AG","AI","AL","AM","AN","AO","AQ","AR","AS","AT","AU","AW","AX","AZ","BA","BB","BD","BE","BF","BG","BH","BI","BJ","BL","BM","BN","BO","BR","BS","BT","BV","BW","BY","BZ","CA","CC","CD","CF","CG","CH","CI","CK","CL","CM","CN","CO","CR","CU","CV","CX","CY","CZ","DE","DJ","DK","DM","DO","DZ","EC","EE","EG","EH","ER","ES","ET","FI","FJ","FK","FM","FO","FR","GA","GB","GD","GE","GF","GG","GH","GI","GL","GM","GN","GP","GQ","GR","GS","GT","GU","GW","GY","HK","HM","HN","HR","HT","HU","ID","IE","IL","IM","IN","IO","IQ","IR","IS","IT","JE","JM","JO","JP","KE","KG","KH","KI","KM","KN","KP","KR","KW","KY","KZ","LA","LB","LC","LI","LK","LR","LS","LT","LU","LV","LY","MA","MC","MD","ME","MF","MG","MH","MK","ML","MM","MN","MO","MP","MQ","MR","MS","MT","MU","MV","MW","MX","MY","MZ","NA","NC","NE","NF","NG","NI","NL","NO","NP","NR","NU","NZ","OM","PA","PE","PF","PG","PH","PK","PL","PM","PN","PR","PS","PT","PW","PY","QA","RE","RO","RS","RU","RW","SA","SB","SC","SD","SE","SG","SH","SI","SJ","SK","SL","SM","SN","SO","SR","SS","ST","SV","SY","SZ","TC","TD","TF","TG","TH","TJ","TK","TL","TM","TN","TO","TR","TT","TV","TW","TZ","UA","UG","UM","US","UY","UZ","VA","VC","VE","VG","VN","VU","WF","WS","YE","YT","ZA","ZM","ZW")]
 		[String]$CertCountryCode = "US",
 
 		# Infrastructure Parameters
 		[Parameter(ParameterSetName="DHCP")]
-        [Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="Static")]
 		[ValidateNotNullOrEmpty()]
 		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]$VMHost,
 
 		[Parameter(ParameterSetName="DHCP")]
-        [Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="Static")]
 		[VMware.VimAutomation.ViCore.Types.V1.Inventory.Folder]$InventoryLocation,
 
 		[Parameter(ParameterSetName="DHCP")]
-        [Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="Static")]
 		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]$Location,
 
 		[Parameter(ParameterSetName="DHCP")]
-        [Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="Static")]
 		[VMware.VimAutomation.ViCore.Types.V1.DatastoreManagement.Datastore]$Datastore,
 
 		[Parameter(ParameterSetName="DHCP")]
-        [Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="Static")]
 		[ValidateSet("Thick","Thick2GB","Thin","Thin2GB","EagerZeroedThick")]
 		[String]$DiskFormat = "thin",
 
 		# Networking
 		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
-        [Parameter(Mandatory=$true,ParameterSetName="Static")]
+		[Parameter(Mandatory=$true,ParameterSetName="Static")]
 		[String]$Network,
 
-		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
-        [Parameter(Mandatory=$true,ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
+		[Parameter(ParameterSetName="Static")]
 		[ValidateSet("IPv4","IPv6")]
 		[String]$IPProtocol = "IPv4",
 
@@ -241,8 +246,12 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
 
 		# Lifecycle Parameters
 		[Parameter(ParameterSetName="DHCP")]
-        [Parameter(ParameterSetName="Static")]
-		[Switch]$PowerOn
+		[Parameter(ParameterSetName="Static")]
+		[Switch]$PowerOn,
+
+		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
+		[Switch]$NoClobber = $true
 	)
 
 	Function New-Configuration () {
@@ -277,10 +286,10 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
 				$ovfconfig.vami.$ApplianceType.DNS.value = $DNSServers -join ","
 				$ovfconfig.vami.$ApplianceType.domain.value = $Domain
 				if ($DNSSearchPath) { $ovfconfig.vami.$ApplianceType.searchpath.value = $DNSSearchPath -join "," }
-            }
+			}
 
-            # Verbose logging passthrough
-            Write-OVFValues -ovfconfig $ovfconfig -Verbose:$VerbosePreference
+			# Verbose logging passthrough
+			Write-OVFValues -ovfconfig $ovfconfig -Type "Verbose" -Verbose:$VerbosePreference
 
 			# Returning the OVF Configuration to the function
 			$ovfconfig
@@ -294,20 +303,20 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
 		$Activity = "Deploying a new vRealize Suite Lifecycle Manager Appliance"
 
 		# Validating Components
-        $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
-        Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
-        $Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
+		Confirm-VM -NoClobber $NoClobber
+		$VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
+		Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
+		$Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
 		if ($PsCmdlet.ParameterSetName -eq "Static") {
 			# Adding all of the required parameters to validate DNS things
 			$validate = @{
-				Name = $Name
-				Domain = $IPAddress
+				Name       = $Name
+				Domain     = $Domain
+				IPAddress  = $IPAddress
 				DNSServers = $DNSServers
-                Verbose = $VerbosePreference
+				FQDN       = $FQDN
+				Verbose    = $VerbosePreference
 			}
-
-			if ($Domain) { $validate.Domain = $Domain }
-			if ($FQDN) { $validate.FQDN = $FQDN }
 
 			# Confirming DNS Settings
 			$FQDN = Confirm-DNS @validate

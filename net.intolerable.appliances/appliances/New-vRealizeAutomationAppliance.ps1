@@ -69,8 +69,13 @@ Function New-vRealizeAutomationAppliance {
 		.Parameter PowerOn
 			Specifies whether to power on the imported appliance once the import completes.
 
+		.Parameter NoClobber
+			Indicates that the function will not remove and replace an existing virtual machine. By default, if a virtual machine with the specifies name exists, the function will fail. If setting this value to 'False', the existing virtual machine will be stopped and removed from the infrastructure permanently.
+
 		.Notes
 			Author: Steve Kaplan (steve@intolerable.net)
+			Version History:
+				- 1.0: Initial release
 
 		.Example
 			Connect-VIServer vCenter.example.com
@@ -211,7 +216,11 @@ Function New-vRealizeAutomationAppliance {
 		# Lifecycle Parameters
 		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
-		[Switch]$PowerOn
+		[Switch]$PowerOn,
+
+		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
+		[Switch]$NoClobber = $true
 	)
 
 	Function New-Configuration () {
@@ -242,7 +251,7 @@ Function New-vRealizeAutomationAppliance {
             }
 
             # Verbose logging passthrough
-            Write-OVFValues -ovfconfig $ovfconfig -Verbose:$VerbosePreference
+            Write-OVFValues -ovfconfig $ovfconfig -Type "Verbose" -Verbose:$VerbosePreference
 
 			# Returning the OVF Configuration to the function
 			$ovfconfig
@@ -256,19 +265,20 @@ Function New-vRealizeAutomationAppliance {
 		$Activity = "Deploying a new vRealize Automation Appliance"
 
 		# Validating Components
+        Confirm-VM -NoClobber $NoClobber
         $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
         Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
         $Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
 		if ($PsCmdlet.ParameterSetName -eq "Static" -and $ValidateDNSEntries -eq $true) {
 			# Adding all of the required parameters to validate DNS things
 			$validate = @{
-				Name = $Name
-				Domain = $IPAddress
+				Name       = $Name
+				Domain     = $Domain
+				IPAddress  = $IPAddress
 				DNSServers = $DNSServers
+				FQDN       = $FQDN
+				Verbose    = $VerbosePreference
 			}
-
-			if ($Domain) { $validate.Domain = $Domain }
-			if ($FQDN) { $validate.FQDN = $FQDN }
 
 			# Confirming DNS Settings
 			$FQDN = Confirm-DNS @validate

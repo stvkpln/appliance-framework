@@ -66,8 +66,13 @@ Function New-IdentityManagerAppliance {
 		.Parameter PowerOn
 			Specifies whether to power on the imported appliance once the import completes.
 
+		.Parameter NoClobber
+			Indicates that the function will not remove and replace an existing virtual machine. By default, if a virtual machine with the specifies name exists, the function will fail. If setting this value to 'False', the existing virtual machine will be stopped and removed from the infrastructure permanently.
+
 		.Notes
 			Author: Steve Kaplan (steve@intolerable.net)
+			Version History:
+				- 1.0: Initial release
 
 		.Example
 			Connect-VIServer vCenter.example.com
@@ -117,35 +122,35 @@ Function New-IdentityManagerAppliance {
     [CmdletBinding(SupportsShouldProcess = $true,DefaultParameterSetName = "Static")]
 	[OutputType('VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine')]
 	Param (
-		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
 		[Parameter(Mandatory=$true,ParameterSetName="Static")]
+		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
 		[ValidateScript( { Confirm-FilePath $_ } )]
 		[System.IO.FileInfo]$OVFPath,
 
-		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
 		[Parameter(Mandatory=$true,ParameterSetName="Static")]
+		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
 		[ValidateNotNullOrEmpty()]
 		[String]$Name,
 
 		# Infrastructure Parameters
-		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
 		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]$VMHost,
 
-		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
 		[VMware.VimAutomation.ViCore.Types.V1.Inventory.Folder]$InventoryLocation,
 
-		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
 		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]$Location,
 
-		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
 		[VMware.VimAutomation.ViCore.Types.V1.DatastoreManagement.Datastore]$Datastore,
 
-		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
 		[ValidateSet("Thick","Thick2GB","Thin","Thin2GB","EagerZeroedThick")]
 		[String]$DiskFormat = "thin",
 
@@ -154,8 +159,8 @@ Function New-IdentityManagerAppliance {
 		[Parameter(Mandatory=$true,ParameterSetName="Static")]
 		[String]$Network,
 
-		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
 		[ValidateSet("IPv4","IPv6")]
 		[String]$IPProtocol = "IPv4",
 
@@ -192,9 +197,13 @@ Function New-IdentityManagerAppliance {
 		[bool]$ValidateDNSEntries = $true,
 
 		# Lifecycle Parameters
-		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
-		[Switch]$PowerOn
+		[Parameter(ParameterSetName="DHCP")]
+		[Switch]$PowerOn,
+
+		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
+		[Switch]$NoClobber = $true
 	)
 
 	Function New-Configuration () {
@@ -220,7 +229,7 @@ Function New-IdentityManagerAppliance {
             }
 
             # Verbose logging passthrough
-            Write-OVFValues -ovfconfig $ovfconfig -Verbose:$VerbosePreference
+            Write-OVFValues -ovfconfig $ovfconfig -Type "Verbose" -Verbose:$VerbosePreference
 
 			# Returning the OVF Configuration to the function
 			$ovfconfig
@@ -233,20 +242,20 @@ Function New-IdentityManagerAppliance {
 		$Activity = "Deploying a new Identity Manager Appliance"
 
 		# Validating Components
+		Confirm-VM -NoClobber $NoClobber
 		$VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
         Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
 		$Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
 		if ($PsCmdlet.ParameterSetName -eq "Static" -and $ValidateDNSEntries -eq $true) {
 			# Adding all of the required parameters to validate DNS things
 			$validate = @{
-				Name = $Name
-				Domain = $IPAddress
+				Name       = $Name
+				Domain     = $Domain
+				IPAddress  = $IPAddress
 				DNSServers = $DNSServers
-                Verbose = $VerbosePreference
+				FQDN       = $FQDN
+				Verbose    = $VerbosePreference
 			}
-			
-			if ($Domain) { $validate.Domain = $Domain }
-			if ($FQDN) { $validate.FQDN = $FQDN }
 
 			# Confirming DNS Settings
 			$FQDN = Confirm-DNS @validate
