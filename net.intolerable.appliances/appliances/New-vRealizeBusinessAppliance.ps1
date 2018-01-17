@@ -283,7 +283,7 @@ Function New-vRealizeBusinessAppliance {
 		# Validating Components
         Confirm-VM -NoClobber $NoClobber
         $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
-        Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
+        Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Verbose:$VerbosePreference
         $Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
 		if ($PsCmdlet.ParameterSetName -eq "Static" -and $ValidateDNSEntries -eq $true) {
 			# Adding all of the required parameters to validate DNS things

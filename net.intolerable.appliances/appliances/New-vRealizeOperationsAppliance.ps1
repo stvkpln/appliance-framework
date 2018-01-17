@@ -270,7 +270,7 @@ Function New-vRealizeOperationsAppliance {
 		# Validating Components
         Confirm-VM -NoClobber $NoClobber
         $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
-        Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
+        Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Verbose:$VerbosePreference
         $Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
 
 		# Configuring the OVF Template and deploying the appliance

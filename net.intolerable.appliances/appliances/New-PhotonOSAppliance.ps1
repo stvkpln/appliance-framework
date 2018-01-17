@@ -44,7 +44,7 @@ Function New-PhotonOSAppliance {
 		.Example
 			Connect-VIServer vCenter.example.com
 			
-			$config = {
+			$config = @{
 				OVFPath = "c:\temp\photon-os.ova"
 				Name = "PhotonOS1"
 				VMHost = (Get-VMHost -Name "host1.example.com")
@@ -114,7 +114,7 @@ Function New-PhotonOSAppliance {
 		# Validating Components
         Confirm-VM -NoClobber $NoClobber
         $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
-        Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
+        Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Verbose:$VerbosePreference
 
 		# Configuring the OVF Template and deploying the appliance
         $ovfconfig = New-Configuration -Verbose:$VerbosePreference
