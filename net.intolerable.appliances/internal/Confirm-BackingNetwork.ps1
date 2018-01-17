@@ -15,8 +15,8 @@ Function Confirm-BackingNetwork {
     	$Status = "Confirming backing network availability"
     	Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Checking vSphere Distributed Portgroups"
         Try{
-            $vdswitches = Get-VDSwitch -VMHost $VMHost -ErrorAction SilentlyContinue
-            if ($vdswitches) { $vdportgroup = Get-VDPortgroup -Name $Network -VDSwitch $vdswitches }
+            $vdswitches = Get-VDSwitch -VMHost $VMHost -ErrorAction SilentlyContinue > $null
+            if ($vdswitches) { $vdportgroup = Get-VDPortgroup -Name $Network -VDSwitch $vdswitches > $null}
             if (!$vdportgroup) { Get-VirtualPortGroup -Name $Network -VMHost $VMHost -ErrorAction Stop > $null }
         }
         Catch{
