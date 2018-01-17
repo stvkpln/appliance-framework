@@ -1,5 +1,5 @@
 Function New-vRealizeSuiteLifecycleManagerAppliance {
-	<#
+    <#
 		.Synopsis
 			Deploy a new vRealize Suite Lifecycle Manager appliance
 
@@ -142,199 +142,206 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
 			-----------
 			Deploy the vRealize Suite Lifecycle Manager appliance with DHCP settings and and do not power it on after the import finishes
 	#>
-	[CmdletBinding(SupportsShouldProcess=$true,DefaultParameterSetName="Static")]
-	[OutputType('VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine')]
-	Param (
-		[Alias("OVA","OVF")]
-		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
-		[Parameter(Mandatory=$true,ParameterSetName="Static")]
-		[System.IO.FileInfo]$OVFPath,
+    [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = "Static")]
+    [OutputType('VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine')]
+    Param (
+        [Alias("OVA", "OVF")]
+        [Parameter(Mandatory = $true, ParameterSetName = "DHCP")]
+        [Parameter(Mandatory = $true, ParameterSetName = "Static")]
+        [System.IO.FileInfo]$OVFPath,
 
-		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
-		[Parameter(Mandatory=$true,ParameterSetName="Static")]
-		[ValidateNotNullOrEmpty()]
-		[String]$Name,
+        [Parameter(Mandatory = $true, ParameterSetName = "DHCP")]
+        [Parameter(Mandatory = $true, ParameterSetName = "Static")]
+        [ValidateNotNullOrEmpty()]
+        [String]$Name,
 
-		[Parameter(ParameterSetName="DHCP")]
-		[Parameter(ParameterSetName="Static")]
-		[bool]$EnableCEIP,
+        [Parameter(ParameterSetName = "DHCP")]
+        [Parameter(ParameterSetName = "Static")]
+        [bool]$EnableCEIP,
 
-		# SSL Certificate Parameters
-		[Alias("CommonName","CN")]
-		[Parameter(ParameterSetName="DHCP")]
-		[Parameter(ParameterSetName="Static")]
-		[String]$CertCommonName,
+        # SSL Certificate Parameters
+        [Alias("CommonName", "CN")]
+        [Parameter(ParameterSetName = "DHCP")]
+        [Parameter(ParameterSetName = "Static")]
+        [String]$CertCommonName,
 
-		[Alias("OrgName","Org")]
-		[Parameter(ParameterSetName="DHCP")]
-		[Parameter(ParameterSetName="Static")]
-		[String]$CertOrgName,
+        [Alias("OrgName", "Org")]
+        [Parameter(ParameterSetName = "DHCP")]
+        [Parameter(ParameterSetName = "Static")]
+        [String]$CertOrgName,
 
-		[Alias("OU","OrgUnit")]
-		[Parameter(ParameterSetName="DHCP")]
-		[Parameter(ParameterSetName="Static")]
-		[String]$CertOrgUnit,
+        [Alias("OU", "OrgUnit")]
+        [Parameter(ParameterSetName = "DHCP")]
+        [Parameter(ParameterSetName = "Static")]
+        [String]$CertOrgUnit,
 
-		[Alias("Country","CountryCode")]
-		[Parameter(ParameterSetName="DHCP")]
-		[Parameter(ParameterSetName="Static")]
-		[ValidateLength(2,2)]
-		[ValidateSet("AD","AE","AF","AG","AI","AL","AM","AN","AO","AQ","AR","AS","AT","AU","AW","AX","AZ","BA","BB","BD","BE","BF","BG","BH","BI","BJ","BL","BM","BN","BO","BR","BS","BT","BV","BW","BY","BZ","CA","CC","CD","CF","CG","CH","CI","CK","CL","CM","CN","CO","CR","CU","CV","CX","CY","CZ","DE","DJ","DK","DM","DO","DZ","EC","EE","EG","EH","ER","ES","ET","FI","FJ","FK","FM","FO","FR","GA","GB","GD","GE","GF","GG","GH","GI","GL","GM","GN","GP","GQ","GR","GS","GT","GU","GW","GY","HK","HM","HN","HR","HT","HU","ID","IE","IL","IM","IN","IO","IQ","IR","IS","IT","JE","JM","JO","JP","KE","KG","KH","KI","KM","KN","KP","KR","KW","KY","KZ","LA","LB","LC","LI","LK","LR","LS","LT","LU","LV","LY","MA","MC","MD","ME","MF","MG","MH","MK","ML","MM","MN","MO","MP","MQ","MR","MS","MT","MU","MV","MW","MX","MY","MZ","NA","NC","NE","NF","NG","NI","NL","NO","NP","NR","NU","NZ","OM","PA","PE","PF","PG","PH","PK","PL","PM","PN","PR","PS","PT","PW","PY","QA","RE","RO","RS","RU","RW","SA","SB","SC","SD","SE","SG","SH","SI","SJ","SK","SL","SM","SN","SO","SR","SS","ST","SV","SY","SZ","TC","TD","TF","TG","TH","TJ","TK","TL","TM","TN","TO","TR","TT","TV","TW","TZ","UA","UG","UM","US","UY","UZ","VA","VC","VE","VG","VN","VU","WF","WS","YE","YT","ZA","ZM","ZW")]
-		[String]$CertCountryCode = "US",
+        [Alias("Country", "CountryCode")]
+        [Parameter(ParameterSetName = "DHCP")]
+        [Parameter(ParameterSetName = "Static")]
+        [ValidateLength(2, 2)]
+        [ValidateSet("AD", "AE", "AF", "AG", "AI", "AL", "AM", "AN", "AO", "AQ", "AR", "AS", "AT", "AU", "AW", "AX", "AZ", "BA", "BB", "BD", "BE", "BF", "BG", "BH", "BI", "BJ", "BL", "BM", "BN", "BO", "BR", "BS", "BT", "BV", "BW", "BY", "BZ", "CA", "CC", "CD", "CF", "CG", "CH", "CI", "CK", "CL", "CM", "CN", "CO", "CR", "CU", "CV", "CX", "CY", "CZ", "DE", "DJ", "DK", "DM", "DO", "DZ", "EC", "EE", "EG", "EH", "ER", "ES", "ET", "FI", "FJ", "FK", "FM", "FO", "FR", "GA", "GB", "GD", "GE", "GF", "GG", "GH", "GI", "GL", "GM", "GN", "GP", "GQ", "GR", "GS", "GT", "GU", "GW", "GY", "HK", "HM", "HN", "HR", "HT", "HU", "ID", "IE", "IL", "IM", "IN", "IO", "IQ", "IR", "IS", "IT", "JE", "JM", "JO", "JP", "KE", "KG", "KH", "KI", "KM", "KN", "KP", "KR", "KW", "KY", "KZ", "LA", "LB", "LC", "LI", "LK", "LR", "LS", "LT", "LU", "LV", "LY", "MA", "MC", "MD", "ME", "MF", "MG", "MH", "MK", "ML", "MM", "MN", "MO", "MP", "MQ", "MR", "MS", "MT", "MU", "MV", "MW", "MX", "MY", "MZ", "NA", "NC", "NE", "NF", "NG", "NI", "NL", "NO", "NP", "NR", "NU", "NZ", "OM", "PA", "PE", "PF", "PG", "PH", "PK", "PL", "PM", "PN", "PR", "PS", "PT", "PW", "PY", "QA", "RE", "RO", "RS", "RU", "RW", "SA", "SB", "SC", "SD", "SE", "SG", "SH", "SI", "SJ", "SK", "SL", "SM", "SN", "SO", "SR", "SS", "ST", "SV", "SY", "SZ", "TC", "TD", "TF", "TG", "TH", "TJ", "TK", "TL", "TM", "TN", "TO", "TR", "TT", "TV", "TW", "TZ", "UA", "UG", "UM", "US", "UY", "UZ", "VA", "VC", "VE", "VG", "VN", "VU", "WF", "WS", "YE", "YT", "ZA", "ZM", "ZW")]
+        [String]$CertCountryCode = "US",
 
-		# Infrastructure Parameters
-		[Parameter(ParameterSetName="DHCP")]
-		[Parameter(ParameterSetName="Static")]
-		[ValidateNotNullOrEmpty()]
-		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]$VMHost,
+        # Infrastructure Parameters
+        [Parameter(ParameterSetName = "DHCP")]
+        [Parameter(ParameterSetName = "Static")]
+        [ValidateNotNullOrEmpty()]
+        [VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]$VMHost,
 
-		[Parameter(ParameterSetName="DHCP")]
-		[Parameter(ParameterSetName="Static")]
-		[VMware.VimAutomation.ViCore.Types.V1.Inventory.Folder]$InventoryLocation,
+        [Parameter(ParameterSetName = "DHCP")]
+        [Parameter(ParameterSetName = "Static")]
+        [VMware.VimAutomation.ViCore.Types.V1.Inventory.Folder]$InventoryLocation,
 
-		[Parameter(ParameterSetName="DHCP")]
-		[Parameter(ParameterSetName="Static")]
-		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]$Location,
+        [Parameter(ParameterSetName = "DHCP")]
+        [Parameter(ParameterSetName = "Static")]
+        [VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]$Location,
 
-		[Parameter(ParameterSetName="DHCP")]
-		[Parameter(ParameterSetName="Static")]
-		[VMware.VimAutomation.ViCore.Types.V1.DatastoreManagement.Datastore]$Datastore,
+        [Parameter(ParameterSetName = "DHCP")]
+        [Parameter(ParameterSetName = "Static")]
+        [VMware.VimAutomation.ViCore.Types.V1.DatastoreManagement.Datastore]$Datastore,
 
-		[Parameter(ParameterSetName="DHCP")]
-		[Parameter(ParameterSetName="Static")]
-		[ValidateSet("Thick","Thick2GB","Thin","Thin2GB","EagerZeroedThick")]
-		[String]$DiskFormat = "thin",
+        [Parameter(ParameterSetName = "DHCP")]
+        [Parameter(ParameterSetName = "Static")]
+        [ValidateSet("Thick", "Thick2GB", "Thin", "Thin2GB", "EagerZeroedThick")]
+        [String]$DiskFormat = "thin",
 
-		# Networking
-		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
-		[Parameter(Mandatory=$true,ParameterSetName="Static")]
-		[String]$Network,
+        # Networking
+        [Parameter(Mandatory = $true, ParameterSetName = "DHCP")]
+        [Parameter(Mandatory = $true, ParameterSetName = "Static")]
+        [String]$Network,
 
-		[Parameter(ParameterSetName="DHCP")]
-		[Parameter(ParameterSetName="Static")]
-		[ValidateSet("IPv4","IPv6")]
-		[String]$IPProtocol = "IPv4",
+        [Parameter(ParameterSetName = "DHCP")]
+        [Parameter(ParameterSetName = "Static")]
+        [ValidateSet("IPv4", "IPv6")]
+        [String]$IPProtocol = "IPv4",
 
-		[Parameter(ParameterSetName="DHCP")]
-		[Switch]$DHCP,
+        [Parameter(ParameterSetName = "DHCP")]
+        [Switch]$DHCP,
 		
-		[Parameter(Mandatory=$true,ParameterSetName="Static")]
-		[ValidateScript( {$_ -match [IPAddress]$_ })]
-		[String]$IPAddress,
+        [Parameter(Mandatory = $true, ParameterSetName = "Static")]
+        [ValidateScript( {$_ -match [IPAddress]$_ })]
+        [String]$IPAddress,
 
-		[Parameter(ParameterSetName="Static")]
-		[String]$SubnetMask = "255.255.255.0",
+        [Parameter(ParameterSetName = "Static")]
+        [String]$SubnetMask = "255.255.255.0",
 
-		[Parameter(ParameterSetName="Static")]
-		[ValidateScript( {$_ -match [IPAddress]$_ })]
-		[String]$Gateway,
+        [Parameter(ParameterSetName = "Static")]
+        [ValidateScript( {$_ -match [IPAddress]$_ })]
+        [String]$Gateway,
 
-		[Parameter(Mandatory=$true,ParameterSetName="Static")]
-		[ValidateCount(1,2)]
-		[ValidateScript( {$_ -match [IPAddress]$_ })]
-		[String[]]$DNSServers,
+        [Parameter(Mandatory = $true, ParameterSetName = "Static")]
+        [ValidateCount(1, 2)]
+        [ValidateScript( {$_ -match [IPAddress]$_ })]
+        [String[]]$DNSServers,
 
-		[Parameter(ParameterSetName="Static")]
-		[ValidateCount(1,4)]
-		[String[]]$DNSSearchPath,
+        [Parameter(ParameterSetName = "Static")]
+        [ValidateCount(1, 4)]
+        [String[]]$DNSSearchPath,
 
-		[Parameter(Mandatory=$true,ParameterSetName="Static")]
-		[String]$Domain,
+        [Parameter(Mandatory = $true, ParameterSetName = "Static")]
+        [String]$Domain,
 
-		[Parameter(ParameterSetName="Static")]
-		[bool]$ValidateDNSEntries = $true,
+        [Parameter(ParameterSetName = "Static")]
+        [bool]$ValidateDNSEntries = $true,
 
-		# Lifecycle Parameters
-		[Parameter(ParameterSetName="DHCP")]
-		[Parameter(ParameterSetName="Static")]
-		[Switch]$PowerOn,
+        # Lifecycle Parameters
+        [Parameter(ParameterSetName = "DHCP")]
+        [Parameter(ParameterSetName = "Static")]
+        [Switch]$PowerOn,
 
-		[Parameter(ParameterSetName="Static")]
-		[Parameter(ParameterSetName="DHCP")]
-		[Switch]$NoClobber = $true
-	)
+        [Parameter(ParameterSetName = "Static")]
+        [Parameter(ParameterSetName = "DHCP")]
+        [Switch]$NoClobber = $true
+    )
 
-	Function New-Configuration () {
-		$Status = "Configuring Appliance Values"
-		Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Extracting OVF Template"
-		$ovfconfig = Get-OvfConfiguration -OvF $OVFPath.FullName
-		if ($ovfconfig) {
-			$ApplianceType = (Get-Member -InputObject $ovfconfig.vami -MemberType "CodeProperty").Name
+    Function New-Configuration () {
+        $Status = "Configuring Appliance Values"
+        Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Extracting OVF Template"
+        $ovfconfig = Get-OvfConfiguration -OvF $OVFPath.FullName
+        if ($ovfconfig) {
+            $ApplianceType = (Get-Member -InputObject $ovfconfig.vami -MemberType "CodeProperty").Name
 
-			# Setting Basics Up
-			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Configuring Basic Values"
-			if ($EnableCEIP) { $ovfconfig.common.va_telemetry_enabled.value = $EnableCEIP }
+            # Setting Basics Up
+            Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Configuring Basic Values"
+            if ($EnableCEIP) { $ovfconfig.common.va_telemetry_enabled.value = $EnableCEIP }
 
-			# SSL Certificate Values
-			if ($CertCommonName) { $ovfconfig.Common.vlcm.cert.commonname.value = $CertCommonName }
-			else { $ovfconfig.Common.vlcm.cert.commonname.value = $FQDN }
+            # SSL Certificate Values
+            if ($CertCommonName) { $ovfconfig.Common.vlcm.cert.commonname.value = $CertCommonName }
+            else { $ovfconfig.Common.vlcm.cert.commonname.value = $FQDN }
 
-			if ($CertOrgName) { $ovfconfig.Common.vlcm.cert.orgname.value = $CertOrgName }
-			if ($CertOrgUnit) { $ovfconfig.Common.vlcm.cert.orgunit.value = $CertOrgUnit }
-			if ($CertCountryCode) { $ovfconfig.Common.vlcm.cert.countrycode.value = $CertCountryCode }
+            if ($CertOrgName) { $ovfconfig.Common.vlcm.cert.orgname.value = $CertOrgName }
+            if ($CertOrgUnit) { $ovfconfig.Common.vlcm.cert.orgunit.value = $CertOrgUnit }
+            if ($CertCountryCode) { $ovfconfig.Common.vlcm.cert.countrycode.value = $CertCountryCode }
 
-			# Setting Networking Values
-			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Assigning Networking Values"
-			$ovfconfig.IpAssignment.IpProtocol.value = $IPProtocol # IP Protocol Value
-			$ovfconfig.NetworkMapping.Network_1.value = $Network; # vSphere Portgroup Network Mapping
+            # Setting Networking Values
+            Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Assigning Networking Values"
+            $ovfconfig.IpAssignment.IpProtocol.value = $IPProtocol # IP Protocol Value
+            $ovfconfig.NetworkMapping.Network_1.value = $Network; # vSphere Portgroup Network Mapping
 
-			if ($PsCmdlet.ParameterSetName -eq "Static") {
-				$ovfconfig.Common.vami.hostname.value = $FQDN
-				$ovfconfig.vami.$ApplianceType.ip0.value = $IPAddress
-				$ovfconfig.vami.$ApplianceType.netmask0.value = $SubnetMask
-				$ovfconfig.vami.$ApplianceType.gateway.value = $Gateway
-				$ovfconfig.vami.$ApplianceType.DNS.value = $DNSServers -join ","
-				$ovfconfig.vami.$ApplianceType.domain.value = $Domain
-				if ($DNSSearchPath) { $ovfconfig.vami.$ApplianceType.searchpath.value = $DNSSearchPath -join "," }
-			}
+            if ($PsCmdlet.ParameterSetName -eq "Static") {
+                $ovfconfig.Common.vami.hostname.value = $FQDN
+                $ovfconfig.vami.$ApplianceType.ip0.value = $IPAddress
+                $ovfconfig.vami.$ApplianceType.netmask0.value = $SubnetMask
+                $ovfconfig.vami.$ApplianceType.gateway.value = $Gateway
+                $ovfconfig.vami.$ApplianceType.DNS.value = $DNSServers -join ","
+                $ovfconfig.vami.$ApplianceType.domain.value = $Domain
+                if ($DNSSearchPath) { $ovfconfig.vami.$ApplianceType.searchpath.value = $DNSSearchPath -join "," }
+            }
 
-			# Verbose logging passthrough
-			Write-OVFValues -ovfconfig $ovfconfig -Type "Verbose" -Verbose:$VerbosePreference
+            # Verbose logging passthrough
+            Write-OVFValues -ovfconfig $ovfconfig -Type "Verbose" -Verbose:$VerbosePreference
 
-			# Returning the OVF Configuration to the function
-			$ovfconfig
-		}
+            # Returning the OVF Configuration to the function
+            $ovfconfig
+        }
 
-		else { throw "The provided file '$($OVFPath)' is not a valid OVA/OVF; please check the path/file and try again" }
-	}
+        else { throw "The provided file '$($OVFPath)' is not a valid OVA/OVF; please check the path/file and try again" }
+    }
 
-	# Workflow to provision the vRealize Suite Lifecycle Manager appliance
-	try {
-		$Activity = "Deploying a new vRealize Suite Lifecycle Manager Appliance"
+    # Workflow to provision the vRealize Suite Lifecycle Manager appliance
+    try {
+        $Activity = "Deploying a new vRealize Suite Lifecycle Manager Appliance"
 
-		# Validating Components
-		Confirm-VM -NoClobber $NoClobber
-		$VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
-		Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Verbose:$VerbosePreference
-		$Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
-		if ($PsCmdlet.ParameterSetName -eq "Static") {
-			# Adding all of the required parameters to validate DNS things
-			$validate = @{
-				Name       = $Name
-				Domain     = $Domain
-				IPAddress  = $IPAddress
-				DNSServers = $DNSServers
-				FQDN       = $FQDN
-				Verbose    = $VerbosePreference
-			}
+        # Validating Components
+        Confirm-VM -Name $Name -NoClobber $NoClobber
+        $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
+        Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Verbose:$VerbosePreference
+        $sGateway = @{
+            Gateway     = $Gateway
+            SubnetMask  = $SubnetMask
+            FourthOctet = $FourthOctet
+            IPAddress   = $IPAddress
+            Verbose     = $VerbosePreference
+        }
+        $Gateway = Set-DefaultGateway @sGateway
+        if ($PsCmdlet.ParameterSetName -eq "Static") {
+            # Adding all of the required parameters to validate DNS things
+            $validate = @{
+                Name       = $Name
+                Domain     = $Domain
+                IPAddress  = $IPAddress
+                DNSServers = $DNSServers
+                FQDN       = $FQDN
+                Verbose    = $VerbosePreference
+            }
 
-			# Confirming DNS Settings
-			$FQDN = Confirm-DNS @validate
-		}
+            # Confirming DNS Settings
+            $FQDN = Confirm-DNS @validate
+        }
 
-		# Configuring the OVF Template and deploying the appliance
-		$ovfconfig = New-Configuration
-		if ($ovfconfig) {
-			if ($PsCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) { Import-Appliance -Verbose:$VerbosePreference }
-			else { 
-				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
-			}
-		}
+        # Configuring the OVF Template and deploying the appliance
+        $ovfconfig = New-Configuration
+        if ($ovfconfig) {
+            if ($PsCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) { Import-Appliance -Verbose:$VerbosePreference }
+            else { 
+                if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
+            }
+        }
 		
-		else { throw $noOvfConfiguration }
-	}
+        else { throw $noOvfConfiguration }
+    }
 
-	catch { Write-Error $_ }
+    catch { Write-Error $_ }
 }
 
 # Adding aliases and exporting this funtion when the module gets loaded
