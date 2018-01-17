@@ -8,14 +8,20 @@
 		If you change this value in the config.json, please import the module again with the -force parameter
 #>
 Function Set-DefaultGateway {
-	Param ([String]$Gateway)
-	if ($Gateway) { $Gateway }
-	elseif (!$Gateway -and $SubnetMask -eq "255.255.255.0" -and $FourthOctet) { 
-		Write-Progress -Activity $Activity -Status "Setting default gateway for Class C IP Address"
-		$ipaddr = $IPAddress.split(".")
-		$ipaddr[3] = $FourthOctet
-		$ipaddr -join "."
-	}
+    Param (
+        [String]$Gateway,
+        [String]$SubnetMask,
+        [String]$FourthOctet,
+        [String]$IPAddress
+    )
 	
-	else { throw "Default gateway must be provided due to the subnet mask not being a standard /24. Provide using the -Gateway parameter" }
+    if ($Gateway) { $Gateway }
+    elseif (!$Gateway -and $SubnetMask -eq "255.255.255.0" -and $FourthOctet) { 
+        Write-Progress -Activity $Activity -Status "Setting default gateway for Class C IP Address"
+        $ipaddr = $IPAddress.split(".")
+        $ipaddr[3] = $FourthOctet
+        $ipaddr -join "."
+    }
+	
+    else { throw "Default gateway must be provided due to the subnet mask not being a standard /24. Provide using the -Gateway parameter" }
 }

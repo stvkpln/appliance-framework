@@ -1,5 +1,5 @@
 Function New-PhotonOSAppliance {
-	<#
+    <#
 		.Synopsis
 			Deploy a new Photon OS virtual appliance
 
@@ -59,75 +59,75 @@ Function New-PhotonOSAppliance {
 			-----------
 			Deploy the Photon OS appliance and power it on after the import finishes
 	#>
-	[CmdletBinding(SupportsShouldProcess=$true)]
-	[OutputType('VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine')]
-	Param (
-		[Parameter(Mandatory=$true)]
-		[ValidateScript( { Confirm-FilePath $_ } )]
-		[System.IO.FileInfo]$OVFPath,
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    [OutputType('VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine')]
+    Param (
+        [Parameter(Mandatory = $true)]
+        [ValidateScript( { Confirm-FilePath -File $_ } )]
+        [System.IO.FileInfo]$OVFPath,
 
-		[Parameter(Mandatory=$true)]
-		[ValidateNotNullOrEmpty()]
-		[String]$Name,
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [String]$Name,
 
-		# Infrastructure Parameters
-		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]$VMHost,
-		[VMware.VimAutomation.ViCore.Types.V1.Inventory.Folder]$InventoryLocation,
-		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]$Location,
-		[VMware.VimAutomation.ViCore.Types.V1.DatastoreManagement.Datastore]$Datastore,
+        # Infrastructure Parameters
+        [VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]$VMHost,
+        [VMware.VimAutomation.ViCore.Types.V1.Inventory.Folder]$InventoryLocation,
+        [VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]$Location,
+        [VMware.VimAutomation.ViCore.Types.V1.DatastoreManagement.Datastore]$Datastore,
 
-		[ValidateSet("Thick","Thick2GB","Thin","Thin2GB","EagerZeroedThick")]
-		[String]$DiskFormat = "thin",
+        [ValidateSet("Thick", "Thick2GB", "Thin", "Thin2GB", "EagerZeroedThick")]
+        [String]$DiskFormat = "thin",
 
-		# Networking
-		[Parameter(Mandatory=$true)]
-		[String]$Network,
+        # Networking
+        [Parameter(Mandatory = $true)]
+        [String]$Network,
 
-		# Lifecycle Parameters
-		[Switch]$PowerOn,
-		[Switch]$NoClobber = $true
-	)
+        # Lifecycle Parameters
+        [Switch]$PowerOn,
+        [Switch]$NoClobber = $true
+    )
 
-	Function New-Configuration () {
-		$Status = "Configuring Appliance Values"
-		Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Extracting OVF Template"
-		$ovfconfig = Get-OvfConfiguration -OvF $OVFPath.FullName
-		if ($ovfconfig) {
+    Function New-Configuration () {
+        $Status = "Configuring Appliance Values"
+        Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Extracting OVF Template"
+        $ovfconfig = Get-OvfConfiguration -OvF $OVFPath.FullName
+        if ($ovfconfig) {
 
-			# Setting Networking Values
-			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Assigning Networking Values"
-			$ovfconfig.NetworkMapping.None.value = $Network; # vSphere Portgroup Network Mapping
+            # Setting Networking Values
+            Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Assigning Networking Values"
+            $ovfconfig.NetworkMapping.None.value = $Network; # vSphere Portgroup Network Mapping
 
-			# Verbose logging passthrough
+            # Verbose logging passthrough
             Write-OVFValues -ovfconfig $ovfconfig -Type "Verbose" -Verbose:$VerbosePreference
 			
-			# Returning the OVF Configuration to the function
-			$ovfconfig
-		}
+            # Returning the OVF Configuration to the function
+            $ovfconfig
+        }
 
-		else { throw "The provided file '$($OVFPath)' is not a valid OVA/OVF; please check the path/file and try again" }
-	}
+        else { throw "The provided file '$($OVFPath)' is not a valid OVA/OVF; please check the path/file and try again" }
+    }
 
-	try {
-		$Activity = "Deploying a new Photon OS Appliance"
+    try {
+        $Activity = "Deploying a new Photon OS Appliance"
 
-		# Validating Components
-        Confirm-VM -NoClobber $NoClobber
+        # Validating Components
+        Confirm-VM -Name $Name -NoClobber $NoClobber
         $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
         Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Verbose:$VerbosePreference
 
-		# Configuring the OVF Template and deploying the appliance
+        # Configuring the OVF Template and deploying the appliance
         $ovfconfig = New-Configuration -Verbose:$VerbosePreference
-		if ($ovfconfig) {
-			if ($PsCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) { Import-Appliance -Verbose:$VerbosePreference }
-			else { 
-				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
-			}
-		}
-		else { throw $noOvfConfiguration }
-	}
+        if ($ovfconfig) {
+            if ($PsCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) { Import-Appliance -Verbose:$VerbosePreference }
+            else { 
+                if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
+            }
+        }
+        else { throw $noOvfConfiguration }
+    }
 
-	catch { Write-Error $_ }
+    catch { Write-Error $_ }
 }
 
 # Adding aliases and exporting this funtion when the module gets loaded

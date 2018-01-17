@@ -8,43 +8,38 @@
 		#2 and #3 will only occur *if* the -ValidateDNSEntries switch is passed via the appliance wrapper function
 #>
 Function Confirm-DNS {
-	Param (
+    Param (
         [ValidateNotNullOrEmpty()]
-		[String]$Name,
-
+        [String]$Name,
         [String]$Domain,
         [String]$FQDN,
-
         [String]$IPAddress,
-
         [String[]]$DNSServers
-	)
+    )
 	
-	$Status = "DNS Validation"
-	# Checking / Setting the FQDN
-	if (!$FQDN) {
-		Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Setting FQDN for the appliance"
-		if ($Domain) { $FQDN = $Name, $Domain -join "." }
-		else { throw "A fully qualified domain name must be provided. Either pass in the FQDN using the -FQDN parameter or pass in a domain name using the -Domain parameter and it will be appended to the name provided for the appliance" }
-	}
+    $Status = "DNS Validation"
+    # Checking / Setting the FQDN
+    if (!$FQDN) {
+        Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Setting FQDN for the appliance"
+        if ($Domain) { $FQDN = $Name, $Domain -join "." }
+        else { throw "A fully qualified domain name must be provided. Either pass in the FQDN using the -FQDN parameter or pass in a domain name using the -Domain parameter and it will be appended to the name provided for the appliance" }
+    }
 
-	if ($ValidateDNSEntries -eq $true) {
-		# Verifying forward DNS Record
-		Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Validating forward DNS record is correct"
-		$forwardLookup = Resolve-DnsName -Name $FQDN -Server $DNSServers -DnsOnly -ErrorAction SilentlyContinue | Where-Object { $_.Type -eq "A" }
-		if (!$forwardLookup) { throw "The provided DNS servers were unable to resolve the FQDN '$($FQDN)'. Please make sure there is an A record and it can be resolved by the DNS servers specified in this request." }
-		else {
-			if ($IPAddress -ne $forwardLookup.IPAddress) { throw "The FQDN $($FQDN) is resolving to '$($forwardLookup.IPAddress)' from the provided DNS servers. Confirm whether the record is correct." }
-		}
-		# Verifying reverse DNS Record
-		Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Validating reverse DNS record is correct"
-		$reverseLookup = Resolve-DnsName -Name $IPAddress -Server $DNSServers -DnsOnly -ErrorAction SilentlyContinue | Where-Object { $_.Type -eq "PTR" }
-		if (!$reverseLookup) { throw "The provided DNS servers were unable to resolve the IP Address '$($IPAddress)' to a FQDN. Please make sure there is a PTR record and it can be resolved by the DNS servers specified in this request." }
-		else {
-			if ($FQDN -ne $reverseLookup.NameHost) { throw "The IP Address '$($IPAddress)' is resolving to a hostname of '$($FQDN)'from the provided DNS servers. Confirm whether the record is correct." }
-		}
-	}
+    # Verifying forward DNS Record
+    Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Validating forward DNS record is correct"
+    $forwardLookup = Resolve-DnsName -Name $FQDN -Server $DNSServers -DnsOnly -ErrorAction SilentlyContinue | Where-Object { $_.Type -eq "A" }
+    if (!$forwardLookup) { throw "The provided DNS servers were unable to resolve the FQDN '$($FQDN)'. Please make sure there is an A record and it can be resolved by the DNS servers specified in this request." }
+    else {
+        if ($IPAddress -ne $forwardLookup.IPAddress) { throw "The FQDN $($FQDN) is resolving to '$($forwardLookup.IPAddress)' from the provided DNS servers. Confirm whether the record is correct." }
+    }
+    # Verifying reverse DNS Record
+    Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Validating reverse DNS record is correct"
+    $reverseLookup = Resolve-DnsName -Name $IPAddress -Server $DNSServers -DnsOnly -ErrorAction SilentlyContinue | Where-Object { $_.Type -eq "PTR" }
+    if (!$reverseLookup) { throw "The provided DNS servers were unable to resolve the IP Address '$($IPAddress)' to a FQDN. Please make sure there is a PTR record and it can be resolved by the DNS servers specified in this request." }
+    else {
+        if ($FQDN -ne $reverseLookup.NameHost) { throw "The IP Address '$($IPAddress)' is resolving to a hostname of '$($FQDN)'from the provided DNS servers. Confirm whether the record is correct." }
+    }
 
-	# Returning the FQDN
-	$FQDN
+    # Returning the FQDN
+    $FQDN
 }
