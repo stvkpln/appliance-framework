@@ -6,6 +6,7 @@
 This module provides a framework to provide a normalized set of parameters to import virtual appliances in OVA or OVF formats into VMware vSphere environments via PowerCLI. In addition to normalized inputs, this framework provides validation of specific infrastructure actions to reduce the possibility of an error:
 
 * Validation that the provided file has a valid file extension and exists
+* Validation that a VM with the same name does not exist, and optionally the ability to remove it permanently from the infrastructure
 * Validation that a VMHost is provided, or the (likely) least taxed host in a provided infrastructure container is used
 * Validation that the provided network (portgroup) exists and is configured on the VMHost where the appliance will be deployed
 * Validation that DNS has been properly configured for both forward (A) and reverse (PTR) records

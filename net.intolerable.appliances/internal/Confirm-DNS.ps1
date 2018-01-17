@@ -15,11 +15,8 @@ Function Confirm-DNS {
         [String]$Domain,
         [String]$FQDN,
 
-		[ValidateScript( {$_ -match [IPAddress]$_ })]
         [String]$IPAddress,
 
-		[ValidateCount(1,2)]
-        [ValidateScript( {$_ -match [IPAddress]$_ })]
         [String[]]$DNSServers
 	)
 	

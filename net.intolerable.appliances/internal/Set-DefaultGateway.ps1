@@ -8,10 +8,7 @@
 		If you change this value in the config.json, please import the module again with the -force parameter
 #>
 Function Set-DefaultGateway {
-	Param (
-		[ValidateScript( {$_ -match [IPAddress]$_ })]
-		[String]$Gateway
-	)
+	Param ([String]$Gateway)
 	if ($Gateway) { $Gateway }
 	elseif (!$Gateway -and $SubnetMask -eq "255.255.255.0" -and $FourthOctet) { 
 		Write-Progress -Activity $Activity -Status "Setting default gateway for Class C IP Address"

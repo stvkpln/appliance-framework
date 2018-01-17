@@ -91,8 +91,13 @@ Function New-vRealizeLogInsightAppliance {
 		.Parameter PowerOn
 			Specifies whether to power on the imported appliance once the import completes.
 
+		.Parameter NoClobber
+			Indicates that the function will not remove and replace an existing virtual machine. By default, if a virtual machine with the specifies name exists, the function will fail. If setting this value to 'False', the existing virtual machine will be stopped and removed from the infrastructure permanently.
+
 		.Notes
 			Author: Steve Kaplan (steve@intolerable.net)
+			Version History:
+				- 1.0: Initial release
 
 		.Example
 			Connect-VIServer vCenter.example.com
@@ -115,7 +120,7 @@ Function New-vRealizeLogInsightAppliance {
 				Verbose = $true
 			}
 
-            New-vRealizeLogInsightAppliance @config
+			New-vRealizeLogInsightAppliance @config
 
    			Description
    			-----------
@@ -273,10 +278,10 @@ Function New-vRealizeLogInsightAppliance {
 				$ovfconfig.vami.$ApplianceType.DNS.value = $DNSServers -join ","
 				if ($DNSSearchPath) { $ovfconfig.vami.$ApplianceType.searchpath.value = $DNSSearchPath -join "," }
 				if ($Domain) { $ovfconfig.vami.$ApplianceType.domain.value = $Domain }
-            }
+			}
 
-            # Verbose logging passthrough
-            Write-OVFValues -ovfconfig $ovfconfig -Verbose:$VerbosePreference
+			# Verbose logging passthrough
+			Write-OVFValues -ovfconfig $ovfconfig -Type "Verbose" -Verbose:$VerbosePreference
 
 			# Returning the OVF Configuration to the function
 			$ovfconfig
@@ -290,18 +295,19 @@ Function New-vRealizeLogInsightAppliance {
 		$Activity = "Deploying a new vRealize Log Insight Appliance"
 		
 		# Validating Components
-        $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
-        Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
-        $Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
+		Confirm-VM -NoClobber $NoClobber
+		$VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
+		Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
+		$Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
 		if ($PsCmdlet.ParameterSetName -eq "Static" -and $ValidateDNSEntries -eq $true) {
 			# Adding all of the required parameters to validate DNS things
 			$validate = @{
-				Name = $Name
-				Domain = $Domain
-                IPAddress = $IPAddress
+				Name       = $Name
+				Domain     = $Domain
+				IPAddress  = $IPAddress
 				DNSServers = $DNSServers
-                FQDN = $FQDN
-                Verbose = $VerbosePreference
+				FQDN       = $FQDN
+				Verbose    = $VerbosePreference
 			}
 
 			# Confirming DNS Settings
@@ -311,16 +317,6 @@ Function New-vRealizeLogInsightAppliance {
 		# Configuring the OVF Template and deploying the appliance
 		$ovfconfig = New-Configuration
 		if ($ovfconfig) {
-            $vm = Get-VM -Name $Name -ErrorAction SilentlyContinue
-            if($vm -and $NoClobber){
-                throw "There is already a VM with the name $($Name). To overwrite, set the NoClobber to $false"
-            }
-            elseif($vm){
-    			if ($PSCmdlet.ShouldProcess($Name, "Remove-VM")) {
-                    Remove-VM -VM $vm -DeletePermanently -Confirm:$false
-                }
-            }
-
 			if ($PSCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) { Import-Appliance -Verbose:$VerbosePreference }
 			else { 
 				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }

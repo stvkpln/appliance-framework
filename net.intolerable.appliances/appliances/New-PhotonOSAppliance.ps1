@@ -33,8 +33,13 @@ Function New-PhotonOSAppliance {
 		.Parameter PowerOn
 			Specifies whether to power on the imported appliance once the import completes.
 
+		.Parameter NoClobber
+			Indicates that the function will not remove and replace an existing virtual machine. By default, if a virtual machine with the specifies name exists, the function will fail. If setting this value to 'False', the existing virtual machine will be stopped and removed from the infrastructure permanently.
+
 		.Notes
 			Author: Steve Kaplan (steve@intolerable.net)
+			Version History:
+				- 1.0: Initial release
 
 		.Example
 			Connect-VIServer vCenter.example.com
@@ -79,7 +84,8 @@ Function New-PhotonOSAppliance {
 		[String]$Network,
 
 		# Lifecycle Parameters
-		[Switch]$PowerOn
+		[Switch]$PowerOn,
+		[Switch]$NoClobber = $true
 	)
 
 	Function New-Configuration () {
@@ -106,6 +112,7 @@ Function New-PhotonOSAppliance {
 		$Activity = "Deploying a new Photon OS Appliance"
 
 		# Validating Components
+        Confirm-VM -NoClobber $NoClobber
         $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
         Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
 

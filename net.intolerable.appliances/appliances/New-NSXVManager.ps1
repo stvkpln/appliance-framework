@@ -71,8 +71,13 @@ Function New-NSXVManager {
 		.Parameter PowerOn
 			Specifies whether to power on the imported appliance once the import completes.
 
+		.Parameter NoClobber
+			Indicates that the function will not remove and replace an existing virtual machine. By default, if a virtual machine with the specifies name exists, the function will fail. If setting this value to 'False', the existing virtual machine will be stopped and removed from the infrastructure permanently.
+
 		.Notes
 			Author: Steve Kaplan (steve@intolerable.net)
+			Version History:
+				- 1.0: Initial release
 
 		.Example
 			Connect-VIServer vCenter.example.com
@@ -159,7 +164,8 @@ Function New-NSXVManager {
 		[String[]]$NTPServers = @("0.north-america.pool.ntp.org", "1.north-america.pool.ntp.org"),
 
 		# Lifecycle Parameters
-		[Switch]$PowerOn
+		[Switch]$PowerOn,
+		[Switch]$NoClobber = $true
 	)
 
 	Function New-Configuration () {
@@ -197,7 +203,7 @@ Function New-NSXVManager {
             $ovfconfig.Common.vsm_ntp_0.value = $NTPServers -join ","
 
             # Verbose logging passthrough
-            Write-OVFValues -ovfconfig $ovfconfig -Verbose:$VerbosePreference
+            Write-OVFValues -ovfconfig $ovfconfig -Type "Verbose" -Verbose:$VerbosePreference
 
 			# Returning the OVF Configuration to the function
 			$ovfconfig
@@ -211,21 +217,21 @@ Function New-NSXVManager {
 		$Activity = "Deploying a new NSX-V Manager"
 
 		# Validating Components
+        Confirm-VM -NoClobber $NoClobber
         $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
         Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
         $Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
 		if ($PsCmdlet.ParameterSetName -eq "Static" -and $ValidateDNSEntries -eq $true) {
 			# Adding all of the required parameters to validate DNS things
 			$validate = @{
-				Name = $Name
-				Domain = $IPAddress
+				Name       = $Name
+				Domain     = $Domain
+				IPAddress  = $IPAddress
 				DNSServers = $DNSServers
-				Verbose = $VerbosePreference
+				FQDN       = $FQDN
+				Verbose    = $VerbosePreference
 			}
-			
-			if ($Domain) { $validate.Domain = $Domain }
-			if ($FQDN) { $validate.FQDN = $FQDN }
-			
+
 			# Confirming DNS Settings
 			$FQDN = Confirm-DNS @validate
 		}
