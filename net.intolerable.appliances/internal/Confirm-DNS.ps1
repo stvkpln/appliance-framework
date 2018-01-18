@@ -14,7 +14,8 @@ Function Confirm-DNS {
         [String]$Domain,
         [String]$FQDN,
         [String]$IPAddress,
-        [String[]]$DnsServers
+        [String[]]$DnsServers,
+        [bool]$ValidateDns
 	)
 	
 	$Status = "DNS Validation"
