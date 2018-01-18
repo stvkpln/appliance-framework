@@ -1,5 +1,5 @@
 Function New-IdentityManagerAppliance {
-    <#
+	<#
 		.Synopsis
 			Deploy a new Identity Manager virtual appliance
 
@@ -119,64 +119,64 @@ Function New-IdentityManagerAppliance {
 			-----------
 			Deploy the Identity Manager appliance with DHCP settings and and do not power it on after the import finishes
 	#>
-    [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = "Static")]
-    [OutputType('VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine')]
-    Param (
-        [Parameter(Mandatory = $true, ParameterSetName = "Static")]
-        [Parameter(Mandatory = $true, ParameterSetName = "DHCP")]
-        [ValidateScript( { Confirm-FilePath --File $_ } )]
-        [System.IO.FileInfo]$OVFPath,
+    [CmdletBinding(SupportsShouldProcess = $true,DefaultParameterSetName = "Static")]
+	[OutputType('VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine')]
+	Param (
+		[Parameter(Mandatory=$true,ParameterSetName="Static")]
+		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
+		[ValidateScript( { Confirm-FilePath $_ } )]
+		[System.IO.FileInfo]$OVFPath,
 
-        [Parameter(Mandatory = $true, ParameterSetName = "Static")]
-        [Parameter(Mandatory = $true, ParameterSetName = "DHCP")]
-        [ValidateNotNullOrEmpty()]
-        [String]$Name,
+		[Parameter(Mandatory=$true,ParameterSetName="Static")]
+		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
+		[ValidateNotNullOrEmpty()]
+		[String]$Name,
 
-        # Infrastructure Parameters
-        [Parameter(ParameterSetName = "Static")]
-        [Parameter(ParameterSetName = "DHCP")]
-        [VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]$VMHost,
+		# Infrastructure Parameters
+		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
+		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]$VMHost,
 
-        [Parameter(ParameterSetName = "Static")]
-        [Parameter(ParameterSetName = "DHCP")]
-        [VMware.VimAutomation.ViCore.Types.V1.Inventory.Folder]$InventoryLocation,
+		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
+		[VMware.VimAutomation.ViCore.Types.V1.Inventory.Folder]$InventoryLocation,
 
-        [Parameter(ParameterSetName = "Static")]
-        [Parameter(ParameterSetName = "DHCP")]
-        [VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]$Location,
+		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
+		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]$Location,
 
-        [Parameter(ParameterSetName = "Static")]
-        [Parameter(ParameterSetName = "DHCP")]
-        [VMware.VimAutomation.ViCore.Types.V1.DatastoreManagement.Datastore]$Datastore,
+		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
+		[VMware.VimAutomation.ViCore.Types.V1.DatastoreManagement.Datastore]$Datastore,
 
-        [Parameter(ParameterSetName = "Static")]
-        [Parameter(ParameterSetName = "DHCP")]
-        [ValidateSet("Thick", "Thick2GB", "Thin", "Thin2GB", "EagerZeroedThick")]
-        [String]$DiskFormat = "thin",
+		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
+		[ValidateSet("Thick","Thick2GB","Thin","Thin2GB","EagerZeroedThick")]
+		[String]$DiskFormat = "thin",
 
-        # Networking
-        [Parameter(Mandatory = $true, ParameterSetName = "DHCP")]
-        [Parameter(Mandatory = $true, ParameterSetName = "Static")]
-        [String]$Network,
+		# Networking
+		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
+		[Parameter(Mandatory=$true,ParameterSetName="Static")]
+		[String]$Network,
 
-        [Parameter(ParameterSetName = "Static")]
-        [Parameter(ParameterSetName = "DHCP")]
-        [ValidateSet("IPv4", "IPv6")]
-        [String]$IPProtocol = "IPv4",
+		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
+		[ValidateSet("IPv4","IPv6")]
+		[String]$IPProtocol = "IPv4",
 
-        [Parameter(ParameterSetName = "DHCP")]
-        [Switch]$DHCP,
+		[Parameter(ParameterSetName="DHCP")]
+		[Switch]$DHCP,
 
-        [Parameter(Mandatory = $true, ParameterSetName = "Static")]
-        [ValidateScript( {$_ -match [IPAddress]$_ })]
-        [String]$IPAddress,
+		[Parameter(Mandatory=$true,ParameterSetName="Static")]
+		[ValidateScript( {$_ -match [IPAddress]$_ })]
+		[String]$IPAddress,
 
-        [Parameter(ParameterSetName = "Static")]
-        [String]$SubnetMask = "255.255.255.0",
+		[Parameter(ParameterSetName="Static")]
+		[String]$SubnetMask = "255.255.255.0",
 
-        [Parameter(ParameterSetName = "Static")]
-        [ValidateScript( {$_ -match [IPAddress]$_ })]
-        [String]$Gateway,
+		[Parameter(ParameterSetName="Static")]
+		[ValidateScript( {$_ -match [IPAddress]$_ })]
+		[String]$Gateway,
 
 		[Parameter(Mandatory=$true,ParameterSetName="Static")]
 		[ValidateCount(1,2)]
@@ -187,38 +187,36 @@ Function New-IdentityManagerAppliance {
 		[ValidateCount(1,4)]
 		[String[]]$DnsSearchPath,
 
-        [Parameter(ParameterSetName = "Static")]
-        [String]$Domain,
+		[Parameter(ParameterSetName="Static")]
+		[String]$Domain,
 
-        [Parameter(ParameterSetName = "Static")]
-        [String]$FQDN,
+		[Parameter(ParameterSetName="Static")]
+		[String]$FQDN,
 
-		  [Parameter(ParameterSetName="Static")]
-		  [bool]$ValidateDns = $true,
 		[Parameter(ParameterSetName="Static")]
 		[bool]$ValidateDns = $true,
 
-        # Lifecycle Parameters
-        [Parameter(ParameterSetName = "Static")]
-        [Parameter(ParameterSetName = "DHCP")]
-        [Switch]$PowerOn,
+		# Lifecycle Parameters
+		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
+		[Switch]$PowerOn,
 
-        [Parameter(ParameterSetName = "Static")]
-        [Parameter(ParameterSetName = "DHCP")]
-        [Switch]$NoClobber = $true
-    )
+		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
+		[Switch]$NoClobber = $true
+	)
 
-    Function New-Configuration () {
-        $Status = "Configuring Appliance Values"
-        Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Extracting OVF Template"
-        $ovfconfig = Get-OvfConfiguration -OvF $OVFPath.FullName
-        if ($ovfconfig) {
-            $ApplianceType = (Get-Member -InputObject $ovfconfig.vami -MemberType "CodeProperty").Name
+	Function New-Configuration () {
+		$Status = "Configuring Appliance Values"
+		Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Extracting OVF Template"
+		$ovfconfig = Get-OvfConfiguration -OvF $OVFPath.FullName
+		if ($ovfconfig) {
+			$ApplianceType = (Get-Member -InputObject $ovfconfig.vami -MemberType "CodeProperty").Name
 
-            # Setting Networking Values
-            Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Assigning Networking Values"
-            $ovfconfig.IpAssignment.IpProtocol.Value = $IPProtocol # IP Protocol Value
-            $ovfconfig.NetworkMapping.Network_1.value = $Network; # vSphere Portgroup Network Mapping
+			# Setting Networking Values
+			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Assigning Networking Values"
+			$ovfconfig.IpAssignment.IpProtocol.Value = $IPProtocol # IP Protocol Value
+			$ovfconfig.NetworkMapping.Network_1.value = $Network; # vSphere Portgroup Network Mapping
 
 			if ($PsCmdlet.ParameterSetName -eq "Static") {
 				$ovfconfig.vami.$vami.ip0.value = $IPAddress
@@ -233,15 +231,15 @@ Function New-IdentityManagerAppliance {
             # Verbose logging passthrough
             Write-OVFValues -ovfconfig $ovfconfig -Type "Verbose" -Verbose:$VerbosePreference
 
-            # Returning the OVF Configuration to the function
-            $ovfconfig
-        }
+			# Returning the OVF Configuration to the function
+			$ovfconfig
+		}
 
-        else { throw "The provided file '$($OVFPath)' is not a valid OVA/OVF; please check the path/file and try again" }
-    }
+		else { throw "The provided file '$($OVFPath)' is not a valid OVA/OVF; please check the path/file and try again" }
+	}
 
-    try {
-        $Activity = "Deploying a new Identity Manager Appliance"
+	try {
+		$Activity = "Deploying a new Identity Manager Appliance"
 
 		# Validating Components
 		Confirm-VM -NoClobber $NoClobber
@@ -260,23 +258,23 @@ Function New-IdentityManagerAppliance {
 				Verbose    = $VerbosePreference
 			}
 
-            # Confirming DNS Settings
-            $FQDN = Confirm-DNS @validate
-        }
+			# Confirming DNS Settings
+			$FQDN = Confirm-DNS @validate
+		}
 
-        # Configuring the OVF Template and deploying the appliance
-        $ovfconfig = New-Configuration
-        if ($ovfconfig) {
-            if ($PsCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) { Import-Appliance -Verbose:$VerbosePreference }
-            else { 
-                if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
-            }
-        }
+		# Configuring the OVF Template and deploying the appliance
+		$ovfconfig = New-Configuration
+		if ($ovfconfig) {
+			if ($PsCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) { Import-Appliance -Verbose:$VerbosePreference }
+			else { 
+				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
+			}
+		}
 		
-        else { throw $noOvfConfiguration }
-    }
+		else { throw $noOvfConfiguration }
+	}
 
-    catch { Write-Error $_ }
+	catch { Write-Error $_ }
 }
 
 # Adding aliases and exporting this funtion when the module gets loaded
