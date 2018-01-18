@@ -51,10 +51,10 @@ Function New-vRealizeAutomationAppliance {
 		.Parameter Gateway
 			The default gateway address for the imported appliance. If a value is not provided, and the subnet mask is a standard Class C address, the default gateway value will be configured as x.x.x.1 of the provided network.
 
-		.Parameter DNSServers
+		.Parameter DnsServers
 			The domain name servers for the imported appliance. Leave blank if DHCP is desired. WARNING: Do not specify more than two DNS entries or no DNS entries will be configured!
 
-		.Parameter DNSSearchPath
+		.Parameter DnsSearchPath
 			The domain name server searchpath for the imported appliance.
 
 		.Parameter Domain
@@ -63,7 +63,7 @@ Function New-vRealizeAutomationAppliance {
 		.Parameter FQDN
 			The hostname or the fully qualified domain name for the deployed appliance.
 
-		.Parameter ValidateDNSEntries
+		.Parameter ValidateDns
 			Specifies whether to perform DNS resolution validation of the networking information. If set to true, lookups for both forward (A) and reverse (PTR) records will be confirmed to match.
 
 		.Parameter PowerOn
@@ -92,8 +92,8 @@ Function New-vRealizeAutomationAppliance {
 				SubnetMask = "255.255.255.0" 
 				Gateway = "10.10.10.1"
 				Domain = "example.com"
-				DNSServers = @("10.10.1.11","10.10.1.12")
-				ValidateDNSEntries = $true
+				DnsServers = @("10.10.1.11","10.10.1.12")
+				ValidateDns = $true
 				PowerOn = $true
 				Verbose = $true
 			}
@@ -198,11 +198,11 @@ Function New-vRealizeAutomationAppliance {
 		[Parameter(Mandatory=$true,ParameterSetName="Static")]
 		[ValidateCount(1,2)]
 		[ValidateScript( {$_ -match [IPAddress]$_ })]
-		[String[]]$DNSServers,
+		[String[]]$DnsServers,
 
 		[Parameter(ParameterSetName="Static")]
 		[ValidateCount(1,4)]
-		[String[]]$DNSSearchPath,
+		[String[]]$DnsSearchPath,
 
 		[Parameter(ParameterSetName="Static")]
 		[String]$Domain,
@@ -211,7 +211,7 @@ Function New-vRealizeAutomationAppliance {
 		[String]$FQDN,
 
 		[Parameter(ParameterSetName="Static")]
-		[bool]$ValidateDNSEntries = $true,
+		[bool]$ValidateDns = $true,
 
 		# Lifecycle Parameters
 		[Parameter(ParameterSetName="DHCP")]
@@ -245,9 +245,9 @@ Function New-vRealizeAutomationAppliance {
 				$ovfconfig.vami.$ApplianceType.ip0.value = $IPAddress
 				$ovfconfig.vami.$ApplianceType.netmask0.value = $SubnetMask
 				$ovfconfig.vami.$ApplianceType.gateway.value = $Gateway
-				$ovfconfig.vami.$ApplianceType.DNS.value = $DNSServers -join ","
+				$ovfconfig.vami.$ApplianceType.DNS.value = $DnsServers -join ","
 				if ($Domain) { $ovfconfig.vami.$ApplianceType.domain.value = $Domain }
-				if ($DNSSearchPath) { $ovfconfig.vami.$ApplianceType.searchpath.value = $DNSSearchPath -join "," }
+				if ($DnsSearchPath) { $ovfconfig.vami.$ApplianceType.searchpath.value = $DnsSearchPath -join "," }
             }
 
             # Verbose logging passthrough
@@ -269,14 +269,15 @@ Function New-vRealizeAutomationAppliance {
         $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
         Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
         $Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
-		if ($PsCmdlet.ParameterSetName -eq "Static" -and $ValidateDNSEntries -eq $true) {
+		if ($PsCmdlet.ParameterSetName -eq "Static" -and $ValidateDns -eq $true) {
 			# Adding all of the required parameters to validate DNS things
 			$validate = @{
 				Name       = $Name
 				Domain     = $Domain
 				IPAddress  = $IPAddress
-				DNSServers = $DNSServers
+				DnsServers = $DnsServers
 				FQDN       = $FQDN
+				ValidateDns = $ValidateDns
 				Verbose    = $VerbosePreference
 			}
 

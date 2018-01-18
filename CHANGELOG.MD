@@ -9,3 +9,4 @@
 * Updated help content to use splat parameter presentation
 * Started adding logging of things via `-Verbose` parameter
 * Added parameter inputs on most of the internal functions
+* Fixed plumbing for `-ValidateDns` so it actually won't check for A/PTR records

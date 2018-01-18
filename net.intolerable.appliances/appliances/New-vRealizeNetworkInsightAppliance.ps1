@@ -58,7 +58,7 @@ Function New-vRealizeNetworkInsightAppliance {
 		.Parameter Gateway
 			The default gateway address for the imported appliance. If a value is not provided, and the subnet mask is a standard Class C address, the default gateway value will be configured as x.x.x.1 of the provided network.
 
-		.Parameter DNSServers
+		.Parameter DnsServers
 			The domain name servers for the imported appliance. Leave blank if DHCP is desired. WARNING: Do not specify more than two DNS entries or no DNS entries will be configured!
 
 		.Parameter Domain
@@ -67,7 +67,7 @@ Function New-vRealizeNetworkInsightAppliance {
 		.Parameter FQDN
 			The hostname or the fully qualified domain name for the deployed appliance.
 
-		.Parameter ValidateDNSEntries
+		.Parameter ValidateDns
 			Specifies whether to perform DNS resolution validation of the networking information. If set to true, lookups for both forward (A) and reverse (PTR) records will be confirmed to match.
 
 		.Parameter NTPServers
@@ -109,8 +109,8 @@ Function New-vRealizeNetworkInsightAppliance {
 				SubnetMask = "255.255.255.0" 
 				Gateway = "10.10.10.1"
 				Domain = "example.com"
-				DNSServers = @("10.10.1.11","10.10.1.12")
-				ValidateDNSEntries = $true
+				DnsServers = @("10.10.1.11","10.10.1.12")
+				ValidateDns = $true
 				NTPServers = 
 				ProxyIP = "10.10.5.12"
 				ProxyPort = "8080"
@@ -141,8 +141,8 @@ Function New-vRealizeNetworkInsightAppliance {
 				SubnetMask = "255.255.255.0" 
 				Gateway = "10.10.10.1"
 				Domain = "example.com"
-				DNSServers = @("10.10.1.11","10.10.1.12")
-				ValidateDNSEntries = $true
+				DnsServers = @("10.10.1.11","10.10.1.12")
+				ValidateDns = $true
 				NTPServers = 
 				ProxyIP = "10.10.5.12"
 				ProxyPort = "8080"
@@ -230,7 +230,7 @@ Function New-vRealizeNetworkInsightAppliance {
 		[Parameter(Mandatory=$true,ParameterSetName="Proxy")]
 		[ValidateCount(1,2)]
 		[ValidateScript( {$_ -match [IPAddress]$_ })]
-		[String[]]$DNSServers,
+		[String[]]$DnsServers,
 
 		[Parameter(ParameterSetName="Platform")]
 		[Parameter(ParameterSetName="Proxy")]
@@ -238,7 +238,7 @@ Function New-vRealizeNetworkInsightAppliance {
 
 		[Parameter(ParameterSetName="Platform")]
 		[Parameter(ParameterSetName="Proxy")]
-		[bool]$ValidateDNSEntries = $true,
+		[bool]$ValidateDns = $true,
 
 		[Parameter(ParameterSetName="Platform")]
 		[Parameter(ParameterSetName="Proxy")]
@@ -289,7 +289,7 @@ Function New-vRealizeNetworkInsightAppliance {
 			$ovfconfig.Common.IP_Address.value = $IPAddress
 			$ovfconfig.Common.Netmask.value = $SubnetMask
 			$ovfconfig.Common.Default_Gateway.value = $Gateway
-			$ovfconfig.Common.DNS.value = $DNSServers -join ","
+			$ovfconfig.Common.DNS.value = $DnsServers -join ","
 			$ovfconfig.Common.Domain_Search.value = 
 			$ovfconfig.Common.NTP.value = $NTPServers -join ","
 			$ovfconfig.Common.Web_Proxy_IP.value = $ProxyIP
@@ -315,14 +315,15 @@ Function New-vRealizeNetworkInsightAppliance {
         $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
         Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
         $Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
-		if ($PsCmdlet.ParameterSetName -eq "Static" -and $ValidateDNSEntries -eq $true) {
+		if ($PsCmdlet.ParameterSetName -eq "Static" -and $ValidateDns -eq $true) {
 			# Adding all of the required parameters to validate DNS things
 			$validate = @{
 				Name       = $Name
 				Domain     = $Domain
 				IPAddress  = $IPAddress
-				DNSServers = $DNSServers
+				DnsServers = $DnsServers
 				FQDN       = $FQDN
+				ValidateDns = $ValidateDns
 				Verbose    = $VerbosePreference
 			}
 
