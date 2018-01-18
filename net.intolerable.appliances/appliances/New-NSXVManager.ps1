@@ -53,7 +53,7 @@ Function New-NSXVManager {
 		.Parameter Gateway
 			The default gateway address for the imported appliance. If a value is not provided, and the subnet mask is a standard Class C address, the default gateway value will be configured as x.x.x.1 of the provided network.
 
-		.Parameter DNSServers
+		.Parameter DnsServers
 			The domain name servers for the imported appliance. Leave blank if DHCP is desired. WARNING: Do not specify more than two DNS entries or no DNS entries will be configured!
 
 		.Parameter Domain
@@ -62,7 +62,7 @@ Function New-NSXVManager {
 		.Parameter FQDN
 			The hostname or the fully qualified domain name for the deployed appliance.
 
-		.Parameter ValidateDNSEntries
+		.Parameter ValidateDns
 			Specifies whether to perform DNS resolution validation of the networking information. If set to true, lookups for both forward (A) and reverse (PTR) records will be confirmed to match.
 
 		.Parameter NTPServers
@@ -95,8 +95,8 @@ Function New-NSXVManager {
 				SubnetMask = "255.255.255.0" 
 				Gateway = "10.10.10.1"
 				Domain = "example.com"
-				DNSServers = @("10.10.1.11","10.10.1.12")
-				ValidateDNSEntries = $true
+				DnsServers = @("10.10.1.11","10.10.1.12")
+				ValidateDns = $true
 				NTPServers = @("0.north-america.pool.ntp.org", "1.north-america.pool.ntp.org")
 				PowerOn = $true
 				Verbose = $true
@@ -153,12 +153,12 @@ Function New-NSXVManager {
         [ValidateScript( {$_ -match [IPAddress]$_ })]
         [String]$Gateway,
 
-        [ValidateCount(1, 2)]
-        [ValidateScript( {$_ -match [IPAddress]$_ })]
-        [String[]]$DNSServers,
-        [String]$Domain,
-        [String]$FQDN,
-        [bool]$ValidateDNSEntries = $true,
+		[ValidateCount(1,2)]
+		[ValidateScript( {$_ -match [IPAddress]$_ })]
+		[String[]]$DnsServers,
+		[String]$Domain,
+		[String]$FQDN,
+		[bool]$ValidateDns = $true,
 
         [ValidateCount(1, 4)]
         [String[]]$NTPServers = @("0.north-america.pool.ntp.org", "1.north-america.pool.ntp.org"),
@@ -191,15 +191,15 @@ Function New-NSXVManager {
             # Setting CEIP Enablement Value
             $ovfconfig.Common.vsm_isCEIPEnabled.value = $EnableCEIP
 
-            # Setting Networking Values
-            Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Assigning Networking Values"
-            $ovfconfig.NetworkMapping.VSMgmt.value = $Network; # vSphere Portgroup Network Mapping
-            $ovfconfig.Common.vsm_ip_0.value = $IPAddress
-            $ovfconfig.Common.vsm_netmask_0.value = $SubnetMask
-            $ovfconfig.Common.vsm_gateway_0.value = $Gateway
-            $ovfconfig.Common.vsm_hostname.value = $FQDN
-            $ovfconfig.Common.vsm_dns1_0.value = $DNSServers -join ","
-            if ($Domain) { $ovfconfig.Common.vsm_domain_0.value = $Domain }
+			# Setting Networking Values
+			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Assigning Networking Values"
+			$ovfconfig.NetworkMapping.VSMgmt.value = $Network; # vSphere Portgroup Network Mapping
+			$ovfconfig.Common.vsm_ip_0.value = $IPAddress
+			$ovfconfig.Common.vsm_netmask_0.value = $SubnetMask
+			$ovfconfig.Common.vsm_gateway_0.value = $Gateway
+			$ovfconfig.Common.vsm_hostname.value = $FQDN
+			$ovfconfig.Common.vsm_dns1_0.value = $DnsServers -join ","
+			if ($Domain) { $ovfconfig.Common.vsm_domain_0.value = $Domain }
             $ovfconfig.Common.vsm_ntp_0.value = $NTPServers -join ","
 
             # Verbose logging passthrough
@@ -219,25 +219,19 @@ Function New-NSXVManager {
         # Validating Components
         Confirm-VM -Name $Name -NoClobber $NoClobber
         $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
-        Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Verbose:$VerbosePreference
-        $sGateway = @{
-            Gateway     = $Gateway
-            SubnetMask  = $SubnetMask
-            FourthOctet = $FourthOctet
-            IPAddress   = $IPAddress
-            Verbose     = $VerbosePreference
-        }
-        $Gateway = Set-DefaultGateway @sGateway
-        if ($PsCmdlet.ParameterSetName -eq "Static" -and $ValidateDNSEntries -eq $true) {
-            # Adding all of the required parameters to validate DNS things
-            $validate = @{
-                Name       = $Name
-                Domain     = $Domain
-                IPAddress  = $IPAddress
-                DNSServers = $DNSServers
-                FQDN       = $FQDN
-                Verbose    = $VerbosePreference
-            }
+        Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
+        $Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
+		if ($PsCmdlet.ParameterSetName -eq "Static" -and $ValidateDns -eq $true) {
+			# Adding all of the required parameters to validate DNS things
+			$validate = @{
+				Name       = $Name
+				Domain     = $Domain
+				IPAddress  = $IPAddress
+				DnsServers = $DnsServers
+				FQDN       = $FQDN
+				ValidateDns = $ValidateDns
+				Verbose    = $VerbosePreference
+			}
 
             # Confirming DNS Settings
             $FQDN = Confirm-DNS @validate

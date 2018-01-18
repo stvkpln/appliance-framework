@@ -64,16 +64,16 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
 		.Parameter Gateway
 			The default gateway address for the imported appliance. If a value is not provided, and the subnet mask is a standard Class C address, the default gateway value will be configured as x.x.x.1 of the provided network.
 
-		.Parameter DNSServers
+		.Parameter DnsServers
 			The domain name servers for the imported appliance. Leave blank if DHCP is desired. WARNING: Do not specify more than two DNS entries or no DNS entries will be configured!
 
-		.Parameter DNSSearchPath
+		.Parameter DnsSearchPath
 			The domain name server searchpath for the imported appliance.
 
 		.Parameter Domain
 			The domain name server domain for the imported appliance. Note this option only works if DNS is specified above.
 
-		.Parameter ValidateDNSEntries
+		.Parameter ValidateDns
 			Specifies whether to perform DNS resolution validation of the networking information. If set to true, lookups for both forward (A) and reverse (PTR) records will be confirmed to match.
 
 		.Parameter PowerOn
@@ -105,8 +105,8 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
 				SubnetMask = "255.255.255.0" 
 				Gateway = "10.10.10.1"
 				Domain = "example.com"
-				DNSServers = @("10.10.1.11","10.10.1.12")
-				ValidateDNSEntries = $true
+				DnsServers = @("10.10.1.11","10.10.1.12")
+				ValidateDns = $true
 				PowerOn = $true
 				Verbose = $true
 			}
@@ -218,6 +218,121 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
         [Parameter(ParameterSetName = "DHCP")]
         [Switch]$DHCP,
 		
+<<<<<<< HEAD
+		[Parameter(Mandatory=$true,ParameterSetName="Static")]
+		[ValidateScript( {$_ -match [IPAddress]$_ })]
+		[String]$IPAddress,
+
+		[Parameter(ParameterSetName="Static")]
+		[String]$SubnetMask = "255.255.255.0",
+
+		[Parameter(ParameterSetName="Static")]
+		[ValidateScript( {$_ -match [IPAddress]$_ })]
+		[String]$Gateway,
+
+		[Parameter(Mandatory=$true,ParameterSetName="Static")]
+		[ValidateCount(1,2)]
+		[ValidateScript( {$_ -match [IPAddress]$_ })]
+		[String[]]$DnsServers,
+
+		[Parameter(ParameterSetName="Static")]
+		[ValidateCount(1,4)]
+		[String[]]$DnsSearchPath,
+
+		[Parameter(Mandatory=$true,ParameterSetName="Static")]
+		[String]$Domain,
+
+		[Parameter(ParameterSetName="Static")]
+		[bool]$ValidateDns = $true,
+
+		# Lifecycle Parameters
+		[Parameter(ParameterSetName="DHCP")]
+		[Parameter(ParameterSetName="Static")]
+		[Switch]$PowerOn,
+
+		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
+		[Switch]$NoClobber = $true
+	)
+
+	Function New-Configuration () {
+		$Status = "Configuring Appliance Values"
+		Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Extracting OVF Template"
+		$ovfconfig = Get-OvfConfiguration -OvF $OVFPath.FullName
+		if ($ovfconfig) {
+			$ApplianceType = (Get-Member -InputObject $ovfconfig.vami -MemberType "CodeProperty").Name
+
+			# Setting Basics Up
+			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Configuring Basic Values"
+			if ($EnableCEIP) { $ovfconfig.common.va_telemetry_enabled.value = $EnableCEIP }
+
+			# SSL Certificate Values
+			if ($CertCommonName) { $ovfconfig.Common.vlcm.cert.commonname.value = $CertCommonName }
+			else { $ovfconfig.Common.vlcm.cert.commonname.value = $FQDN }
+
+			if ($CertOrgName) { $ovfconfig.Common.vlcm.cert.orgname.value = $CertOrgName }
+			if ($CertOrgUnit) { $ovfconfig.Common.vlcm.cert.orgunit.value = $CertOrgUnit }
+			if ($CertCountryCode) { $ovfconfig.Common.vlcm.cert.countrycode.value = $CertCountryCode }
+
+			# Setting Networking Values
+			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Assigning Networking Values"
+			$ovfconfig.IpAssignment.IpProtocol.value = $IPProtocol # IP Protocol Value
+			$ovfconfig.NetworkMapping.Network_1.value = $Network; # vSphere Portgroup Network Mapping
+
+			if ($PsCmdlet.ParameterSetName -eq "Static") {
+				$ovfconfig.Common.vami.hostname.value = $FQDN
+				$ovfconfig.vami.$ApplianceType.ip0.value = $IPAddress
+				$ovfconfig.vami.$ApplianceType.netmask0.value = $SubnetMask
+				$ovfconfig.vami.$ApplianceType.gateway.value = $Gateway
+				$ovfconfig.vami.$ApplianceType.DNS.value = $DnsServers -join ","
+				$ovfconfig.vami.$ApplianceType.domain.value = $Domain
+				if ($DnsSearchPath) { $ovfconfig.vami.$ApplianceType.searchpath.value = $DnsSearchPath -join "," }
+			}
+
+			# Verbose logging passthrough
+			Write-OVFValues -ovfconfig $ovfconfig -Type "Verbose" -Verbose:$VerbosePreference
+
+			# Returning the OVF Configuration to the function
+			$ovfconfig
+		}
+
+		else { throw "The provided file '$($OVFPath)' is not a valid OVA/OVF; please check the path/file and try again" }
+	}
+
+	# Workflow to provision the vRealize Suite Lifecycle Manager appliance
+	try {
+		$Activity = "Deploying a new vRealize Suite Lifecycle Manager Appliance"
+
+		# Validating Components
+		Confirm-VM -NoClobber $NoClobber
+		$VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
+		Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
+		$Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
+		if ($PsCmdlet.ParameterSetName -eq "Static") {
+			# Adding all of the required parameters to validate DNS things
+			$validate = @{
+				Name       = $Name
+				Domain     = $Domain
+				IPAddress  = $IPAddress
+				DnsServers = $DnsServers
+				FQDN       = $FQDN
+				ValidateDns = $ValidateDns
+				Verbose    = $VerbosePreference
+			}
+
+			# Confirming DNS Settings
+			$FQDN = Confirm-DNS @validate
+		}
+
+		# Configuring the OVF Template and deploying the appliance
+		$ovfconfig = New-Configuration
+		if ($ovfconfig) {
+			if ($PsCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) { Import-Appliance -Verbose:$VerbosePreference }
+			else { 
+				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
+			}
+		}
+=======
         [Parameter(Mandatory = $true, ParameterSetName = "Static")]
         [ValidateScript( {$_ -match [IPAddress]$_ })]
         [String]$IPAddress,
@@ -337,6 +452,7 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
                 if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
             }
         }
+>>>>>>> development
 		
         else { throw $noOvfConfiguration }
     }

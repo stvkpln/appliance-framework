@@ -73,10 +73,10 @@ Function New-vRealizeLogInsightAppliance {
 		.Parameter Gateway
 			The default gateway address for the imported appliance. If a value is not provided, and the subnet mask is a standard Class C address, the default gateway value will be configured as x.x.x.1 of the provided network.
 
-		.Parameter DNSServers
+		.Parameter DnsServers
 			The domain name servers for the imported appliance. Leave blank if DHCP is desired. WARNING: Do not specify more than two DNS entries or no DNS entries will be configured!
 
-		.Parameter DNSSearchPath
+		.Parameter DnsSearchPath
 			The domain name server searchpath for the imported appliance.
 
 		.Parameter Domain
@@ -85,7 +85,7 @@ Function New-vRealizeLogInsightAppliance {
 		.Parameter FQDN
 			The hostname or the fully qualified domain name for the deployed appliance.
 
-		.Parameter ValidateDNSEntries
+		.Parameter ValidateDns
 			Specifies whether to perform DNS resolution validation of the networking information. If set to true, lookups for both forward (A) and reverse (PTR) records will be confirmed to match.
 
 		.Parameter PowerOn
@@ -114,8 +114,8 @@ Function New-vRealizeLogInsightAppliance {
 				SubnetMask = "255.255.255.0" 
 				Gateway = "10.10.10.1"
 				Domain = "example.com"
-				DNSServers = @("10.10.1.11","10.10.1.12")
-				ValidateDNSEntries = $true
+				DnsServers = @("10.10.1.11","10.10.1.12")
+				ValidateDns = $true
 				PowerOn = $true
 				Verbose = $true
 			}
@@ -223,6 +223,16 @@ Function New-vRealizeLogInsightAppliance {
         [ValidateScript( {$_ -match [IPAddress]$_ })]
         [String]$Gateway,
 
+<<<<<<< HEAD
+		[Parameter(Mandatory=$true,ParameterSetName="Static")]
+		[ValidateCount(1,2)]
+		[ValidateScript( {$_ -match [IPAddress]$_ })]
+		[String[]]$DnsServers,
+
+		[Parameter(ParameterSetName="Static")]
+		[ValidateCount(1,4)]
+		[String[]]$DnsSearchPath,
+=======
         [Parameter(Mandatory = $true, ParameterSetName = "Static")]
         [ValidateCount(1, 2)]
         [ValidateScript( {$_ -match [IPAddress]$_ })]
@@ -231,10 +241,64 @@ Function New-vRealizeLogInsightAppliance {
         [Parameter(ParameterSetName = "Static")]
         [ValidateCount(1, 4)]
         [String[]]$DNSSearchPath,
+>>>>>>> development
 
         [Parameter(ParameterSetName = "Static")]
         [String]$Domain,
 		
+<<<<<<< HEAD
+		[Parameter(ParameterSetName="Static")]
+		[String]$FQDN,
+
+		[Parameter(ParameterSetName="Static")]
+		[bool]$ValidateDns = $true,
+
+		# Lifecycle Parameters
+		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
+		[Switch]$PowerOn,
+
+		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
+		[Switch]$NoClobber = $true
+
+	)
+
+	Function New-Configuration () {
+		$Status = "Configuring Appliance Values"
+		Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Extracting OVF Template"
+		$ovfconfig = Get-OvfConfiguration -OvF $OVFPath.FullName
+		if ($ovfconfig) {
+			$ApplianceType = (Get-Member -InputObject $ovfconfig.vami -MemberType "CodeProperty").Name
+
+			# Setting Basics Up
+			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Configuring Basic Values"
+			$ovfconfig.DeploymentOption.Value = $DeploymentSize.toLower(); # Value for the deployment size
+			if ($RootPassword) { $ovfconfig.vm.rootpw.value = $RootPassword } # Setting the provided password for the root account
+			if ($SSHKey) { $ovfconfig.vm.sshkey.value = $SSHKey } # Setting the provided SSH Public Key			
+
+			# Setting Networking Values
+			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Assigning Networking Values"
+			$ovfconfig.IpAssignment.IpProtocol.Value = $IPProtocol # IP Protocol Value
+			$ovfconfig.NetworkMapping.Network_1.value = $Network; # vSphere Portgroup Network Mapping
+
+			if ($PsCmdlet.ParameterSetName -eq "Static") {
+				$ovfconfig.vami.$ApplianceType.ip0.value = $IPAddress
+				$ovfconfig.vami.$ApplianceType.netmask0.value = $SubnetMask
+				$ovfconfig.vami.$ApplianceType.gateway.value = $Gateway
+				$ovfconfig.vami.$ApplianceType.hostname.value = $FQDN
+				$ovfconfig.vami.$ApplianceType.DNS.value = $DnsServers -join ","
+				if ($DnsSearchPath) { $ovfconfig.vami.$ApplianceType.searchpath.value = $DnsSearchPath -join "," }
+				if ($Domain) { $ovfconfig.vami.$ApplianceType.domain.value = $Domain }
+			}
+
+			# Verbose logging passthrough
+			Write-OVFValues -ovfconfig $ovfconfig -Type "Verbose" -Verbose:$VerbosePreference
+
+			# Returning the OVF Configuration to the function
+			$ovfconfig
+		}
+=======
         [Parameter(ParameterSetName = "Static")]
         [String]$FQDN,
 
@@ -286,6 +350,7 @@ Function New-vRealizeLogInsightAppliance {
             # Returning the OVF Configuration to the function
             $ovfconfig
         }
+>>>>>>> development
 		
         else { throw "The provided file '$($OVFPath)' is not a valid OVA/OVF; please check the path/file and try again" }
     }
@@ -294,6 +359,37 @@ Function New-vRealizeLogInsightAppliance {
     try {
         $Activity = "Deploying a new vRealize Log Insight Appliance"
 		
+<<<<<<< HEAD
+		# Validating Components
+		Confirm-VM -NoClobber $NoClobber
+		$VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
+		Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
+		$Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
+		if ($PsCmdlet.ParameterSetName -eq "Static" -and $ValidateDns -eq $true) {
+			# Adding all of the required parameters to validate DNS things
+			$validate = @{
+				Name       = $Name
+				Domain     = $Domain
+				IPAddress  = $IPAddress
+				DnsServers = $DnsServers
+				FQDN       = $FQDN
+				ValidateDns = $ValidateDns
+				Verbose    = $VerbosePreference
+			}
+
+			# Confirming DNS Settings
+			$FQDN = Confirm-DNS @validate
+		}
+
+		# Configuring the OVF Template and deploying the appliance
+		$ovfconfig = New-Configuration
+		if ($ovfconfig) {
+			if ($PSCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) { Import-Appliance -Verbose:$VerbosePreference }
+			else { 
+				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
+			}
+		}
+=======
         # Validating Components
         Confirm-VM -Name $Name -NoClobber $NoClobber
         $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
@@ -329,6 +425,7 @@ Function New-vRealizeLogInsightAppliance {
                 if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
             }
         }
+>>>>>>> development
 		
         else { throw $noOvfConfiguration }
     }
