@@ -1,5 +1,5 @@
 Function New-vRealizeNetworkInsightAppliance {
-    <#
+	<#
 		.Synopsis
 			Deploy a new vRealize Network Insight Platform or Proxy virtual appliance
 
@@ -157,7 +157,6 @@ Function New-vRealizeNetworkInsightAppliance {
 			Deploy the vRealize Network Insight Proxy appliance with static IP settings and power it on after the import finishes. 
 			In this example, the Verbose flag is being passed, so all OVF properties will be shown as part of the output
 	#>
-<<<<<<< HEAD
 	[CmdletBinding(SupportsShouldProcess=$true,DefaultParameterSetName="Platform")]
 	[OutputType('VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine')]
 	Param (
@@ -251,107 +250,11 @@ Function New-vRealizeNetworkInsightAppliance {
 		[Parameter(ParameterSetName="Proxy")]
 		[ValidateScript( {$_ -match [IPAddress]$_ })]
 		[String]$ProxyIP,
-=======
-    [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = "Platform")]
-    [OutputType('VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine')]
-    Param (
-        [Alias("OVA", "OVF")]
-        [Parameter(Mandatory = $true, ParameterSetName = "Platform")]
-        [Parameter(Mandatory = $true, ParameterSetName = "Proxy")]
-        [System.IO.FileInfo]$OVFPath,
-
-        [Parameter(Mandatory = $true, ParameterSetName = "Platform")]
-        [Parameter(Mandatory = $true, ParameterSetName = "Proxy")]
-        [ValidateSet("Platform", "Proxy")]
-        [String]$Type,
-
-        [Alias("Size", "DeploymentType")]
-        [Parameter(Mandatory = $true, ParameterSetName = "Platform")]
-        [Parameter(Mandatory = $true, ParameterSetName = "Proxy")]
-        [ValidateSet("medium", "large")]
-        [String]$DeploymentSize = "medium",
-
-        [Parameter(Mandatory = $true, ParameterSetName = "Platform")]
-        [Parameter(Mandatory = $true, ParameterSetName = "Proxy")]
-        [ValidateNotNullOrEmpty()]
-        [String]$Name,
-
-        [Parameter(ParameterSetName = "Platform")]
-        [Parameter(ParameterSetName = "Proxy")]
-        [Switch]$AllowHealthTelemetry,
-
-        # Infrastructure Parameters
-        [Parameter(ParameterSetName = "Platform")]
-        [Parameter(ParameterSetName = "Proxy")]
-        [VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]$VMHost,
-
-        [Parameter(ParameterSetName = "Platform")]
-        [Parameter(ParameterSetName = "Proxy")]
-        [VMware.VimAutomation.ViCore.Types.V1.Inventory.Folder]$InventoryLocation,
-
-        [Parameter(ParameterSetName = "Platform")]
-        [Parameter(ParameterSetName = "Proxy")]
-        [VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]$Location,
-
-        [Parameter(ParameterSetName = "Platform")]
-        [Parameter(ParameterSetName = "Proxy")]
-        [VMware.VimAutomation.ViCore.Types.V1.DatastoreManagement.Datastore]$Datastore,
-
-        [Parameter(Mandatory = $true, ParameterSetName = "Platform")]
-        [Parameter(Mandatory = $true, ParameterSetName = "Proxy")]
-        [ValidateSet("Thick", "Thick2GB", "Thin", "Thin2GB", "EagerZeroedThick")]
-        [String]$DiskFormat = "Thin",
-
-        # Networking
-        [Parameter(Mandatory = $true, ParameterSetName = "Platform")]
-        [Parameter(Mandatory = $true, ParameterSetName = "Proxy")]
-        [String]$Network,
-
-        [Parameter(Mandatory = $true, ParameterSetName = "Platform")]
-        [Parameter(Mandatory = $true, ParameterSetName = "Proxy")]
-        [ValidateScript( {$_ -match [IPAddress]$_ })]
-        [String]$IPAddress,
-
-        [Parameter(ParameterSetName = "Platform")]
-        [Parameter(ParameterSetName = "Proxy")]
-        [String]$SubnetMask = "255.255.255.0",
-
-        [Parameter(ParameterSetName = "Platform")]
-        [Parameter(ParameterSetName = "Proxy")]
-        [ValidateScript( {$_ -match [IPAddress]$_ })]
-        [String]$Gateway,
-
-        [Parameter(Mandatory = $true, ParameterSetName = "Platform")]
-        [Parameter(Mandatory = $true, ParameterSetName = "Proxy")]
-        [ValidateCount(1, 2)]
-        [ValidateScript( {$_ -match [IPAddress]$_ })]
-        [String[]]$DNSServers,
-
-        [Parameter(ParameterSetName = "Platform")]
-        [Parameter(ParameterSetName = "Proxy")]
-        [String]$Domain,
-
-        [Parameter(ParameterSetName = "Platform")]
-        [Parameter(ParameterSetName = "Proxy")]
-        [bool]$ValidateDNSEntries = $true,
-
-        [Parameter(ParameterSetName = "Platform")]
-        [Parameter(ParameterSetName = "Proxy")]
-        [ValidateCount(1, 4)]
-        [String[]]$NTPServers = @("0.north-america.pool.ntp.org", "1.north-america.pool.ntp.org"),
-
-        # Proxy Values
-        [Parameter(ParameterSetName = "Platform")]
-        [Parameter(ParameterSetName = "Proxy")]
-        [ValidateScript( {$_ -match [IPAddress]$_ })]
-        [String]$ProxyIP,
->>>>>>> development
 		
-        [Parameter(ParameterSetName = "Platform")]
-        [Parameter(ParameterSetName = "Proxy")]
-        [String]$ProxyPort,
+		[Parameter(ParameterSetName="Platform")]
+		[Parameter(ParameterSetName="Proxy")]
+		[String]$ProxyPort,
 		
-<<<<<<< HEAD
 		[Parameter(Mandatory=$true,ParameterSetName="Proxy")]
 		[String]$ProxySharedSecret,
 
@@ -391,67 +294,25 @@ Function New-vRealizeNetworkInsightAppliance {
 			$ovfconfig.Common.NTP.value = $NTPServers -join ","
 			$ovfconfig.Common.Web_Proxy_IP.value = $ProxyIP
 			$ovfconfig.Common.Web_Proxy_Port.value = $ProxyPort
-=======
-        [Parameter(Mandatory = $true, ParameterSetName = "Proxy")]
-        [String]$ProxySharedSecret,
-
-        # Lifecycle Parameters
-        [Parameter(ParameterSetName = "Platform")]
-        [Parameter(ParameterSetName = "Proxy")]
-        [Switch]$PowerOn,
-
-        [Parameter(ParameterSetName = "Platform")]
-        [Parameter(ParameterSetName = "Proxy")]
-        [Switch]$NoClobber = $true
-    )
-
-    Function New-Configuration () {
-        $Status = "Configuring Appliance Values"
-        Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Extracting OVF Template"
-        $ovfconfig = Get-OvfConfiguration -OvF $OVFPath.FullName
-        if ($ovfconfig) {
-            # Setting Basics Up
-            Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Configuring Basic Values"
-            $ovfconfig.DeploymentOption.value = $DeploymentSize.toLower(); # Value for the deployment size
-            if ($AllowHealthTelemetry) { $ovfconfig.Common.Health_Telemetry_Push.value = $true } # Enabling if the Health Telemetry switch is passed in
-
-            # Setting Networking Values
-            Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Assigning Networking Values"
-
-            # Network Backing; the code property seems to change with each release, so making this particular bit dynamic
-            $NetworkMapping = (Get-Member -InputObject $ovfconfig.NetworkMapping -MemberType "CodeProperty").Name
-            $ovfconfig.NetworkMapping.$NetworkMapping.value = $Network
-
-            # IP Networking
-            $ovfconfig.Common.IP_Address.value = $IPAddress
-            $ovfconfig.Common.Netmask.value = $SubnetMask
-            $ovfconfig.Common.Default_Gateway.value = $Gateway
-            $ovfconfig.Common.DNS.value = $DNSServers -join ","
-            $ovfconfig.Common.Domain_Search.value = 
-            $ovfconfig.Common.NTP.value = $NTPServers -join ","
-            $ovfconfig.Common.Web_Proxy_IP.value = $ProxyIP
-            $ovfconfig.Common.Web_Proxy_Port.value = $ProxyPort
->>>>>>> development
             if ($Type = "Proxy") { $ovfconfig.Common.Proxy_Shared_Secret.value = $ProxySharedSecret }
 
             # Verbose logging passthrough
             Write-OVFValues -ovfconfig $ovfconfig -Type "Verbose" -Verbose:$VerbosePreference
 
-            # Returning the OVF Configuration to the function
-            $ovfconfig
-        }
+			# Returning the OVF Configuration to the function
+			$ovfconfig
+		}
 
-        else { throw "The provided file '$($OVFPath)' is not a valid OVA/OVF; please check the path/file and try again" }
-    }
+		else { throw "The provided file '$($OVFPath)' is not a valid OVA/OVF; please check the path/file and try again" }
+	}
 
-    # Workflow to provision the NSX-V Virtual Appliance
-    try {
-        $Activity = "Deploying a new vRealize Network Insight appliance"
+	# Workflow to provision the NSX-V Virtual Appliance
+	try {
+		$Activity = "Deploying a new vRealize Network Insight appliance"
 		
-        # Validating Components
-        Confirm-VM -Name $Name -NoClobber $NoClobber
+		# Validating Components
+        Confirm-VM -NoClobber $NoClobber
         $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
-<<<<<<< HEAD
         Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
         $Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
 		if ($PsCmdlet.ParameterSetName -eq "Static" -and $ValidateDns -eq $true) {
@@ -479,46 +340,11 @@ Function New-vRealizeNetworkInsightAppliance {
 				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
 			}
 		}
-=======
-        Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Verbose:$VerbosePreference
-        $sGateway = @{
-            Gateway     = $Gateway
-            SubnetMask  = $SubnetMask
-            FourthOctet = $FourthOctet
-            IPAddress   = $IPAddress
-            Verbose     = $VerbosePreference
-        }
-        $Gateway = Set-DefaultGateway @sGateway
-        if ($PsCmdlet.ParameterSetName -eq "Static" -and $ValidateDNSEntries -eq $true) {
-            # Adding all of the required parameters to validate DNS things
-            $validate = @{
-                Name       = $Name
-                Domain     = $Domain
-                IPAddress  = $IPAddress
-                DNSServers = $DNSServers
-                FQDN       = $FQDN
-                Verbose    = $VerbosePreference
-            }
-
-            # Confirming DNS Settings
-            $FQDN = Confirm-DNS @validate
-        }
-
-        # Configuring the OVF Template and deploying the appliance
-        Write-Host $FQDN
-        $ovfconfig = New-Configuration
-        if ($ovfconfig) {
-            if ($PsCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) { Import-Appliance -Verbose:$VerbosePreference }
-            else { 
-                if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
-            }
-        }
->>>>>>> development
 		
-        else { throw $noOvfConfiguration }
-    }
+		else { throw $noOvfConfiguration }
+	}
 
-    catch { Write-Error $_ }
+	catch { Write-Error $_ }
 }
 
 # Adding aliases and exporting this funtion when the module gets loaded

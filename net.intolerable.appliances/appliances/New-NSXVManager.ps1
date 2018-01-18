@@ -1,5 +1,5 @@
 Function New-NSXVManager {
-    <#
+	<#
 		.Synopsis
 			Deploy a new NSX-V Manager virtual appliance
 
@@ -109,49 +109,49 @@ Function New-NSXVManager {
 			Deploy the NSX-V Manager appliance with static IP settings and power it on after the import finishes. 
 			In this example, the Verbose flag is being passed, so all OVF properties will be shown as part of the output
 	#>
-    [CmdletBinding(SupportsShouldProcess = $true)]
-    [OutputType('VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine')]	
-    Param (
-        [Alias("OVA", "OVF")]
-        [Parameter(Mandatory = $true)]
-        [ValidateScript( { Confirm-FilePath -File $_ } )]
-        [System.IO.FileInfo]$OVFPath,
+	[CmdletBinding(SupportsShouldProcess=$true)]
+	[OutputType('VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine')]	
+	Param (
+		[Alias("OVA","OVF")]
+		[Parameter(Mandatory=$true)]
+		[ValidateScript( { Confirm-FilePath $_ } )]
+		[System.IO.FileInfo]$OVFPath,
 
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [String]$Name,
+		[Parameter(Mandatory=$true)]
+		[ValidateNotNullOrEmpty()]
+		[String]$Name,
 
-        [Alias("Password", "AdminPassword")]
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [String]$CLIPassword,
+		[Alias("Password","AdminPassword")]
+		[Parameter(Mandatory=$true)]
+		[ValidateNotNullOrEmpty()]
+		[String]$CLIPassword,
 
-        [Alias("EnablePassword")]
-        [String]$CLIENPassword,
-        [Switch]$EnableSSH,
-        [bool]$EnableCEIP = $true,
+		[Alias("EnablePassword")]
+		[String]$CLIENPassword,
+		[Switch]$EnableSSH,
+		[bool]$EnableCEIP = $true,
 
-        # Infrastructure Parameters
-        [VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]$VMHost,
-        [VMware.VimAutomation.ViCore.Types.V1.Inventory.Folder]$InventoryLocation,
-        [VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]$Location,
-        [VMware.VimAutomation.ViCore.Types.V1.DatastoreManagement.Datastore]$Datastore,
+		# Infrastructure Parameters
+		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]$VMHost,
+		[VMware.VimAutomation.ViCore.Types.V1.Inventory.Folder]$InventoryLocation,
+		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]$Location,
+		[VMware.VimAutomation.ViCore.Types.V1.DatastoreManagement.Datastore]$Datastore,
 
-        [ValidateSet("Thick", "Thick2GB", "Thin", "Thin2GB", "EagerZeroedThick")]
-        [String]$DiskFormat = "Thin",
+		[ValidateSet("Thick","Thick2GB","Thin","Thin2GB","EagerZeroedThick")]
+		[String]$DiskFormat = "Thin",
 
-        # Networking
-        [Parameter(Mandatory = $true)]
-        [String]$Network,
+		# Networking
+		[Parameter(Mandatory=$true)]
+		[String]$Network,
 
-        [Parameter(Mandatory = $true)]
-        [ValidateScript( {$_ -match [IPAddress]$_ })]
-        [String]$IPAddress,
+		[Parameter(Mandatory=$true)]
+		[ValidateScript( {$_ -match [IPAddress]$_ })]
+		[String]$IPAddress,
 
-        [String]$SubnetMask = "255.255.255.0",
+		[String]$SubnetMask = "255.255.255.0",
 
-        [ValidateScript( {$_ -match [IPAddress]$_ })]
-        [String]$Gateway,
+		[ValidateScript( {$_ -match [IPAddress]$_ })]
+		[String]$Gateway,
 
 		[ValidateCount(1,2)]
 		[ValidateScript( {$_ -match [IPAddress]$_ })]
@@ -160,36 +160,36 @@ Function New-NSXVManager {
 		[String]$FQDN,
 		[bool]$ValidateDns = $true,
 
-        [ValidateCount(1, 4)]
-        [String[]]$NTPServers = @("0.north-america.pool.ntp.org", "1.north-america.pool.ntp.org"),
+		[ValidateCount(1,4)]
+		[String[]]$NTPServers = @("0.north-america.pool.ntp.org", "1.north-america.pool.ntp.org"),
 
-        # Lifecycle Parameters
-        [Switch]$PowerOn,
-        [Switch]$NoClobber = $true
-    )
+		# Lifecycle Parameters
+		[Switch]$PowerOn,
+		[Switch]$NoClobber = $true
+	)
 
-    Function New-Configuration () {
-        $Status = "Configuring Appliance Values"
-        Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Extracting OVF Template"
-        $ovfconfig = Get-OvfConfiguration -OvF $OVFPath.FullName
-        if ($ovfconfig) {
-            # Setting Basics Up
-            Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Configuring Basic Values"
-            # Setting "admin" user password
-            $ovfconfig.Common.vsm_cli_passwd_0.value = $CLIPassword 
+	Function New-Configuration () {
+		$Status = "Configuring Appliance Values"
+		Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Extracting OVF Template"
+		$ovfconfig = Get-OvfConfiguration -OvF $OVFPath.FullName
+		if ($ovfconfig) {
+			# Setting Basics Up
+			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Configuring Basic Values"
+			# Setting "admin" user password
+			$ovfconfig.Common.vsm_cli_passwd_0.value = $CLIPassword 
 
-            # Setting Enable password
-            if ($CLIENPassword) { $ovfconfig.Common.vsm_cli_en_passwd_0.value = $CLIENPassword }
-            else { 
-                Write-Warning "A CLI Enable Password was not provided. Using the same value as -CLIPassword"
-                $ovfconfig.Common.vsm_cli_en_passwd_0.value = $CLIPassword 
-            }
+			# Setting Enable password
+			if ($CLIENPassword) { $ovfconfig.Common.vsm_cli_en_passwd_0.value = $CLIENPassword }
+			else { 
+				Write-Warning "A CLI Enable Password was not provided. Using the same value as -CLIPassword"
+				$ovfconfig.Common.vsm_cli_en_passwd_0.value = $CLIPassword 
+			}
 
-            # Setting SSH Enablement value
-            if ($EnableSSH) { $ovfconfig.Common.vsm_isSSHEnabled.value = $true }
+			# Setting SSH Enablement value
+			if ($EnableSSH) { $ovfconfig.Common.vsm_isSSHEnabled.value = $true }
 
-            # Setting CEIP Enablement Value
-            $ovfconfig.Common.vsm_isCEIPEnabled.value = $EnableCEIP
+			# Setting CEIP Enablement Value
+			$ovfconfig.Common.vsm_isCEIPEnabled.value = $EnableCEIP
 
 			# Setting Networking Values
 			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Assigning Networking Values"
@@ -205,19 +205,19 @@ Function New-NSXVManager {
             # Verbose logging passthrough
             Write-OVFValues -ovfconfig $ovfconfig -Type "Verbose" -Verbose:$VerbosePreference
 
-            # Returning the OVF Configuration to the function
-            $ovfconfig
-        }
+			# Returning the OVF Configuration to the function
+			$ovfconfig
+		}
 
-        else { throw "The provided file '$($OVFPath)' is not a valid OVA/OVF; please check the path/file and try again" }
-    }
+		else { throw "The provided file '$($OVFPath)' is not a valid OVA/OVF; please check the path/file and try again" }
+	}
 
-    # Workflow to provision the NSX-V Virtual Appliance
-    try {
-        $Activity = "Deploying a new NSX-V Manager"
+	# Workflow to provision the NSX-V Virtual Appliance
+	try {
+		$Activity = "Deploying a new NSX-V Manager"
 
-        # Validating Components
-        Confirm-VM -Name $Name -NoClobber $NoClobber
+		# Validating Components
+        Confirm-VM -NoClobber $NoClobber
         $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
         Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
         $Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
@@ -233,23 +233,23 @@ Function New-NSXVManager {
 				Verbose    = $VerbosePreference
 			}
 
-            # Confirming DNS Settings
-            $FQDN = Confirm-DNS @validate
-        }
+			# Confirming DNS Settings
+			$FQDN = Confirm-DNS @validate
+		}
 
-        # Configuring the OVF Template and deploying the appliance
-        $ovfconfig = New-Configuration
-        if ($ovfconfig) {
-            if ($PsCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) { Import-Appliance -Verbose:$VerbosePreference }
-            else { 
-                if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
-            }
-        }
+		# Configuring the OVF Template and deploying the appliance
+		$ovfconfig = New-Configuration
+		if ($ovfconfig) {
+			if ($PsCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) { Import-Appliance -Verbose:$VerbosePreference }
+			else { 
+				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
+			}
+		}
 		
-        else { throw $noOvfConfiguration }
-    }
+		else { throw $noOvfConfiguration }
+	}
 
-    catch { Write-Error $_ }
+	catch { Write-Error $_ }
 }
 
 # Adding aliases and exporting this funtion when the module gets loaded

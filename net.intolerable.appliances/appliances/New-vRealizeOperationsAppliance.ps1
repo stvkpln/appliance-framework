@@ -268,17 +268,10 @@ Function New-vRealizeOperationsAppliance {
 		$Activity = "Deploying a new vRealize Operations Appliance"
 		
 		# Validating Components
-        Confirm-VM -Name $Name -NoClobber $NoClobber
+        Confirm-VM -NoClobber $NoClobber
         $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
-        Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Verbose:$VerbosePreference
-		$sGateway = @{
-			Gateway = $Gateway
-			SubnetMask = $SubnetMask
-			FourthOctet = $FourthOctet
-			IPAddress = $IPAddress
-			Verbose = $VerbosePreference
-		}
-		$Gateway = Set-DefaultGateway @sGateway
+        Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
+        $Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
 
 		# Configuring the OVF Template and deploying the appliance
 		$ovfconfig = New-Configuration
