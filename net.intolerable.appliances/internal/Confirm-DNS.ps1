@@ -43,6 +43,8 @@ Function Confirm-DNS {
 		}
 	}
 
+	if ($ValidateDns -eq $false) { Write-Warning -Message "DNS Validation has been disabled for this appliance provisioning operation. Confirmation of both forward and reverse lookup records will be skipped." }
+
 	# Returning the FQDN
 	$FQDN
 }
