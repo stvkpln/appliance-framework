@@ -1,5 +1,5 @@
 Function New-vRealizeLogInsightAppliance {
-	<#
+    <#
 		.Synopsis
 			Deploy a new vRealize Log Insight virtual appliance
 
@@ -149,80 +149,81 @@ Function New-vRealizeLogInsightAppliance {
 			-----------
 			Deploy the vRealize Log Insight appliance with DHCP settings and and do not power it on after the import finishes
 	#>
-	[CmdletBinding(SupportsShouldProcess=$true,DefaultParameterSetName="Static")]
-	[OutputType('VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine')]
-	Param (
-		[Parameter(Mandatory=$true,ParameterSetName="Static")]
-		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
-		[Alias("OVA","OVF")]
-		[ValidateScript( { Confirm-FilePath $_ } )][
-		System.IO.FileInfo]$OVFPath,
+    [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = "Static")]
+    [OutputType('VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine')]
+    Param (
+        [Parameter(Mandatory = $true, ParameterSetName = "Static")]
+        [Parameter(Mandatory = $true, ParameterSetName = "DHCP")]
+        [Alias("OVA", "OVF")]
+        [ValidateScript( { Confirm-FilePath -File $_ } )][
+        System.IO.FileInfo]$OVFPath,
 
-		[Parameter(Mandatory=$true,ParameterSetName="Static")]
-		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
-		[Alias("Size","DeploymentType")]
-		[ValidateSet("xsmall","small","medium","large")]
-		[String]$DeploymentSize = "small",
+        [Parameter(Mandatory = $true, ParameterSetName = "Static")]
+        [Parameter(Mandatory = $true, ParameterSetName = "DHCP")]
+        [Alias("Size", "DeploymentType")]
+        [ValidateSet("xsmall", "small", "medium", "large")]
+        [String]$DeploymentSize = "small",
 		
-		[Parameter(Mandatory=$true,ParameterSetName="Static")]
-		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
-		[ValidateNotNullOrEmpty()]
-		[String]$Name,
+        [Parameter(Mandatory = $true, ParameterSetName = "Static")]
+        [Parameter(Mandatory = $true, ParameterSetName = "DHCP")]
+        [ValidateNotNullOrEmpty()]
+        [String]$Name,
 
-		[Parameter(Mandatory=$true,ParameterSetName="Static")]
-		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
-		[ValidateNotNullOrEmpty()]
-		[String]$RootPassword,
+        [Parameter(Mandatory = $true, ParameterSetName = "Static")]
+        [Parameter(Mandatory = $true, ParameterSetName = "DHCP")]
+        [ValidateNotNullOrEmpty()]
+        [String]$RootPassword,
 		
-		[Parameter(ParameterSetName="DHCP")]
-		[String]$SSHKey,
+        [Parameter(ParameterSetName = "DHCP")]
+        [String]$SSHKey,
 
-		# Infrastructure Parameters
-		[Parameter(ParameterSetName="Static")]
-		[Parameter(ParameterSetName="DHCP")]
-		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]$VMHost,
+        # Infrastructure Parameters
+        [Parameter(ParameterSetName = "Static")]
+        [Parameter(ParameterSetName = "DHCP")]
+        [VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]$VMHost,
 
-		[Parameter(ParameterSetName="Static")]
-		[Parameter(ParameterSetName="DHCP")]
-		[VMware.VimAutomation.ViCore.Types.V1.Inventory.Folder]$InventoryLocation,
+        [Parameter(ParameterSetName = "Static")]
+        [Parameter(ParameterSetName = "DHCP")]
+        [VMware.VimAutomation.ViCore.Types.V1.Inventory.Folder]$InventoryLocation,
 
-		[Parameter(ParameterSetName="Static")]
-		[Parameter(ParameterSetName="DHCP")]
-		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]$Location,
+        [Parameter(ParameterSetName = "Static")]
+        [Parameter(ParameterSetName = "DHCP")]
+        [VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]$Location,
 
-		[Parameter(ParameterSetName="Static")]
-		[Parameter(ParameterSetName="DHCP")]
-		[VMware.VimAutomation.ViCore.Types.V1.DatastoreManagement.Datastore]$Datastore,
+        [Parameter(ParameterSetName = "Static")]
+        [Parameter(ParameterSetName = "DHCP")]
+        [VMware.VimAutomation.ViCore.Types.V1.DatastoreManagement.Datastore]$Datastore,
 
-		[Parameter(ParameterSetName="Static")]
-		[Parameter(ParameterSetName="DHCP")]
-		[ValidateSet("Thick","Thick2GB","Thin","Thin2GB","EagerZeroedThick")]
-		[String]$DiskFormat = "thin",
+        [Parameter(ParameterSetName = "Static")]
+        [Parameter(ParameterSetName = "DHCP")]
+        [ValidateSet("Thick", "Thick2GB", "Thin", "Thin2GB", "EagerZeroedThick")]
+        [String]$DiskFormat = "thin",
 
-		# Networking
-		[Parameter(Mandatory=$true,ParameterSetName="Static")]
-		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
-		[String]$Network,
+        # Networking
+        [Parameter(Mandatory = $true, ParameterSetName = "Static")]
+        [Parameter(Mandatory = $true, ParameterSetName = "DHCP")]
+        [String]$Network,
 
-		[Parameter(ParameterSetName="Static")]
-		[Parameter(ParameterSetName="DHCP")]
-		[ValidateSet("IPv4","IPv6")]
-		[String]$IPProtocol = "IPv4",
+        [Parameter(ParameterSetName = "Static")]
+        [Parameter(ParameterSetName = "DHCP")]
+        [ValidateSet("IPv4", "IPv6")]
+        [String]$IPProtocol = "IPv4",
 
-		[Parameter(ParameterSetName="DHCP")]
-		[Switch]$DHCP,
+        [Parameter(ParameterSetName = "DHCP")]
+        [Switch]$DHCP,
 		
-		[Parameter(Mandatory=$true,ParameterSetName="Static")]
-		[ValidateScript( {$_ -match [IPAddress]$_ })]
-		[String]$IPAddress,
+        [Parameter(Mandatory = $true, ParameterSetName = "Static")]
+        [ValidateScript( {$_ -match [IPAddress]$_ })]
+        [String]$IPAddress,
 
-		[Parameter(ParameterSetName="Static")]
-		[String]$SubnetMask = "255.255.255.0",
+        [Parameter(ParameterSetName = "Static")]
+        [String]$SubnetMask = "255.255.255.0",
 		
-		[Parameter(ParameterSetName="Static")]
-		[ValidateScript( {$_ -match [IPAddress]$_ })]
-		[String]$Gateway,
+        [Parameter(ParameterSetName = "Static")]
+        [ValidateScript( {$_ -match [IPAddress]$_ })]
+        [String]$Gateway,
 
+<<<<<<< HEAD
 		[Parameter(Mandatory=$true,ParameterSetName="Static")]
 		[ValidateCount(1,2)]
 		[ValidateScript( {$_ -match [IPAddress]$_ })]
@@ -231,10 +232,21 @@ Function New-vRealizeLogInsightAppliance {
 		[Parameter(ParameterSetName="Static")]
 		[ValidateCount(1,4)]
 		[String[]]$DnsSearchPath,
+=======
+        [Parameter(Mandatory = $true, ParameterSetName = "Static")]
+        [ValidateCount(1, 2)]
+        [ValidateScript( {$_ -match [IPAddress]$_ })]
+        [String[]]$DNSServers,
 
-		[Parameter(ParameterSetName="Static")]
-		[String]$Domain,
+        [Parameter(ParameterSetName = "Static")]
+        [ValidateCount(1, 4)]
+        [String[]]$DNSSearchPath,
+>>>>>>> development
+
+        [Parameter(ParameterSetName = "Static")]
+        [String]$Domain,
 		
+<<<<<<< HEAD
 		[Parameter(ParameterSetName="Static")]
 		[String]$FQDN,
 
@@ -286,14 +298,68 @@ Function New-vRealizeLogInsightAppliance {
 			# Returning the OVF Configuration to the function
 			$ovfconfig
 		}
-		
-		else { throw "The provided file '$($OVFPath)' is not a valid OVA/OVF; please check the path/file and try again" }
-	}
+=======
+        [Parameter(ParameterSetName = "Static")]
+        [String]$FQDN,
 
-	# Workflow to provision the vRealize Log Insight Virtual Appliance
-	try {
-		$Activity = "Deploying a new vRealize Log Insight Appliance"
+        [Parameter(ParameterSetName = "Static")]
+        [bool]$ValidateDNSEntries = $true,
+
+        # Lifecycle Parameters
+        [Parameter(ParameterSetName = "Static")]
+        [Parameter(ParameterSetName = "DHCP")]
+        [Switch]$PowerOn,
+
+        [Parameter(ParameterSetName = "Static")]
+        [Parameter(ParameterSetName = "DHCP")]
+        [Switch]$NoClobber = $true
+
+    )
+
+    Function New-Configuration () {
+        $Status = "Configuring Appliance Values"
+        Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Extracting OVF Template"
+        $ovfconfig = Get-OvfConfiguration -OvF $OVFPath.FullName
+        if ($ovfconfig) {
+            $ApplianceType = (Get-Member -InputObject $ovfconfig.vami -MemberType "CodeProperty").Name
+
+            # Setting Basics Up
+            Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Configuring Basic Values"
+            $ovfconfig.DeploymentOption.Value = $DeploymentSize.toLower(); # Value for the deployment size
+            if ($RootPassword) { $ovfconfig.vm.rootpw.value = $RootPassword } # Setting the provided password for the root account
+            if ($SSHKey) { $ovfconfig.vm.sshkey.value = $SSHKey } # Setting the provided SSH Public Key			
+
+            # Setting Networking Values
+            Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Assigning Networking Values"
+            $ovfconfig.IpAssignment.IpProtocol.Value = $IPProtocol # IP Protocol Value
+            $ovfconfig.NetworkMapping.Network_1.value = $Network; # vSphere Portgroup Network Mapping
+
+            if ($PsCmdlet.ParameterSetName -eq "Static") {
+                $ovfconfig.vami.$ApplianceType.ip0.value = $IPAddress
+                $ovfconfig.vami.$ApplianceType.netmask0.value = $SubnetMask
+                $ovfconfig.vami.$ApplianceType.gateway.value = $Gateway
+                $ovfconfig.vami.$ApplianceType.hostname.value = $FQDN
+                $ovfconfig.vami.$ApplianceType.DNS.value = $DNSServers -join ","
+                if ($DNSSearchPath) { $ovfconfig.vami.$ApplianceType.searchpath.value = $DNSSearchPath -join "," }
+                if ($Domain) { $ovfconfig.vami.$ApplianceType.domain.value = $Domain }
+            }
+
+            # Verbose logging passthrough
+            Write-OVFValues -ovfconfig $ovfconfig -Type "Verbose" -Verbose:$VerbosePreference
+
+            # Returning the OVF Configuration to the function
+            $ovfconfig
+        }
+>>>>>>> development
 		
+        else { throw "The provided file '$($OVFPath)' is not a valid OVA/OVF; please check the path/file and try again" }
+    }
+
+    # Workflow to provision the vRealize Log Insight Virtual Appliance
+    try {
+        $Activity = "Deploying a new vRealize Log Insight Appliance"
+		
+<<<<<<< HEAD
 		# Validating Components
 		Confirm-VM -NoClobber $NoClobber
 		$VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
@@ -323,15 +389,52 @@ Function New-vRealizeLogInsightAppliance {
 				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
 			}
 		}
-		
-		else { throw $noOvfConfiguration }
-	}
+=======
+        # Validating Components
+        Confirm-VM -Name $Name -NoClobber $NoClobber
+        $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
+        Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Verbose:$VerbosePreference
+        $sGateway = @{
+            Gateway     = $Gateway
+            SubnetMask  = $SubnetMask
+            FourthOctet = $FourthOctet
+            IPAddress   = $IPAddress
+            Verbose     = $VerbosePreference
+        }
+        $Gateway = Set-DefaultGateway @sGateway
+        if ($PsCmdlet.ParameterSetName -eq "Static" -and $ValidateDNSEntries -eq $true) {
+            # Adding all of the required parameters to validate DNS things
+            $validate = @{
+                Name       = $Name
+                Domain     = $Domain
+                IPAddress  = $IPAddress
+                DNSServers = $DNSServers
+                FQDN       = $FQDN
+                Verbose    = $VerbosePreference
+            }
 
-	catch { Write-Error $_ }
+            # Confirming DNS Settings
+            $FQDN = Confirm-DNS @validate
+        }
+
+        # Configuring the OVF Template and deploying the appliance
+        $ovfconfig = New-Configuration
+        if ($ovfconfig) {
+            if ($PSCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) { Import-Appliance -Verbose:$VerbosePreference }
+            else { 
+                if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
+            }
+        }
+>>>>>>> development
+		
+        else { throw $noOvfConfiguration }
+    }
+
+    catch { Write-Error $_ }
 }
 
 # Adding aliases and exporting this funtion when the module gets loaded
 New-Alias -Value New-vRealizeLogInsightAppliance -Name New-LogInsight
 New-Alias -Value New-vRealizeLogInsightAppliance -Name New-vRLI
 New-Alias -Value New-vRealizeLogInsightAppliance -Name New-LI
-Export-ModuleMember -Function New-vRealizeLogInsightAppliance -Alias @("New-LI","New-LogInsight","New-vRLI")
+Export-ModuleMember -Function New-vRealizeLogInsightAppliance -Alias @("New-LI", "New-LogInsight", "New-vRLI")
