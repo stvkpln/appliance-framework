@@ -14,7 +14,8 @@ Function Confirm-DNS {
         [String]$Domain,
         [String]$FQDN,
         [String]$IPAddress,
-        [String[]]$DnsServers
+        [String[]]$DnsServers,
+        [bool]$ValidateDns
 	)
 	
 	$Status = "DNS Validation"
@@ -41,6 +42,8 @@ Function Confirm-DNS {
 			if ($FQDN -ne $reverseLookup.NameHost) { throw "The IP Address '$($IPAddress)' is resolving to a hostname of '$($reverseLookup.NameHost)', rather than the expected value of '$($FQDN)', from the provided DNS servers. Confirm whether the record is correct." }
 		}
 	}
+
+	if ($ValidateDns -eq $false) { Write-Warning -Message "DNS Validation has been disabled for this appliance provisioning operation. Confirmation of both forward and reverse lookup records will be skipped." }
 
 	# Returning the FQDN
 	$FQDN
