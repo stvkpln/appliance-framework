@@ -1,5 +1,9 @@
 Function Confirm-VM {
-	Param ([bool]$NoClobber)
+	Param (
+		[string]$Name,
+		[bool]$NoClobber
+	)
+	
 	if ($NoClobber -eq $false) { Write-Verbose -Message "The 'NoClobber' parameter was set to 'False'. If a virtual machine with the requested name is discovered, it will automatically be destroyed." }
 	
 	# Finding the virtual machine

@@ -254,7 +254,7 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
 		[Switch]$NoClobber = $true
 	)
 
-	Function New-Configuration () {
+	Function New-Configuration {
 		$Status = "Configuring Appliance Values"
 		Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Extracting OVF Template"
 		$ovfconfig = Get-OvfConfiguration -OvF $OVFPath.FullName
@@ -303,10 +303,17 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
 		$Activity = "Deploying a new vRealize Suite Lifecycle Manager Appliance"
 
 		# Validating Components
-		Confirm-VM -NoClobber $NoClobber
+		Confirm-VM -Name $Name -NoClobber $NoClobber
 		$VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
 		Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
-		$Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
+		$sGateway = @{
+			IPAddress = $IPAddress
+			FourthOctet = $FourthOctet
+			SubnetMask = $SubnetMask
+			Gateway = $Gateway
+			Verbose = $VerbosePreference
+		}
+		$Gateway = Set-DefaultGateway @sGateway
 		if ($PsCmdlet.ParameterSetName -eq "Static") {
 			# Adding all of the required parameters to validate DNS things
 			$validate = @{
@@ -326,7 +333,16 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
 		# Configuring the OVF Template and deploying the appliance
 		$ovfconfig = New-Configuration
 		if ($ovfconfig) {
-			if ($PsCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) { Import-Appliance -Verbose:$VerbosePreference }
+			if ($PsCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) {
+				$sImpApp = @{
+					Name = $Name
+					DiskFormat = $DiskFormat
+					VMHost = $VMHost
+					ovfconfig = $ovfconfig
+					Verbose = $VerbosePreference
+				}
+				 Import-Appliance @sImpApp
+			}
 			else { 
 				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
 			}

@@ -1,6 +1,6 @@
 Function Write-OVFValues {
 	Param (
-		$ovfconfig,
+		[PSObject]$ovfconfig,
 		[String]$Type
 	) 
 	
