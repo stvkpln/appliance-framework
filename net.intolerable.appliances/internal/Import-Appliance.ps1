@@ -4,6 +4,13 @@
 		If the 'PowerOn' flag is provided, the imported appliance will be powered on
 #>
 Function Import-Appliance {
+	param(
+		[string]$Name,
+		[string]$DiskFormat,
+		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]$VMHost,
+		[PSObject]$ovfconfig
+	)
+
 	# Defining Execution Parameters to pass into Import-VApp
 	$import_params = @{
 		DiskStorageFormat = $DiskFormat
