@@ -71,8 +71,8 @@ Function New-NSXVManager {
 		.Parameter PowerOn
 			Specifies whether to power on the imported appliance once the import completes.
 
-		.Parameter NoClobber
-			Indicates that the function will not remove and replace an existing virtual machine. By default, if a virtual machine with the specifies name exists, the function will fail. If setting this value to 'False', the existing virtual machine will be stopped and removed from the infrastructure permanently.
+		.Parameter AllowClobber
+			Indicates whether or not to replace an existing virtual machine, if discovered. The default behavior (set to 'False'), the function will fail with an error that there is an esisting virtual machine. If set to true, the discovered virtual machine will be stopped and removed permanently from the infrastructure *WITHOUT PROMPTING*. Use careuflly!
 
 		.Notes
 			Author: Steve Kaplan (steve@intolerable.net)
@@ -114,7 +114,7 @@ Function New-NSXVManager {
 	Param (
 		[Alias("OVA","OVF")]
 		[Parameter(Mandatory=$true)]
-		[ValidateScript( { Confirm-FilePath $_ } )]
+		[ValidateScript( { Confirm-FileExtension -File $_ } )]
 		[System.IO.FileInfo]$OVFPath,
 
 		[Parameter(Mandatory=$true)]
@@ -165,14 +165,17 @@ Function New-NSXVManager {
 
 		# Lifecycle Parameters
 		[Switch]$PowerOn,
-		[Switch]$NoClobber = $true
+		[Switch]$AllowClobber = $false
 	)
 
-	Function New-Configuration () {
+	Function New-Configuration{
 		$Status = "Configuring Appliance Values"
 		Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Extracting OVF Template"
 		$ovfconfig = Get-OvfConfiguration -OvF $OVFPath.FullName
 		if ($ovfconfig) {
+			# Setting the name of the function and invoking opening verbose logging message
+			Write-Verbose -Message (Get-FormattedMessage -Message "$($MyInvocation.MyCommand) Started execution")
+
 			# Setting Basics Up
 			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Configuring Basic Values"
 			# Setting "admin" user password
@@ -209,7 +212,10 @@ Function New-NSXVManager {
 			$ovfconfig
 		}
 
-		else { throw "The provided file '$($OVFPath)' is not a valid OVA/OVF; please check the path/file and try again" }
+		else { throw "$($invalidFile) $($OVFPath)" }
+
+		# Verbose logging output to finish things off
+		Write-Verbose -Message (Get-FormattedMessage -Message "$($MyInvocation.MyCommand) Finished execution")
 	}
 
 	# Workflow to provision the NSX-V Virtual Appliance
@@ -217,10 +223,17 @@ Function New-NSXVManager {
 		$Activity = "Deploying a new NSX-V Manager"
 
 		# Validating Components
-        Confirm-VM -NoClobber $NoClobber
+        Confirm-VM -Name $Name -AllowClobber $AllowClobber
         $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
-        Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
-        $Gateway = Set-DefaultGateway -Gateway $Gateway -Verbose:$VerbosePreference
+        Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Verbose:$VerbosePreference
+		$sGateway = @{
+			IPAddress = $IPAddress
+			FourthOctet = $FourthOctet
+			SubnetMask = $SubnetMask
+			Gateway = $Gateway
+			Verbose = $VerbosePreference
+		}
+		$Gateway = Set-DefaultGateway @sGateway
 		if ($PsCmdlet.ParameterSetName -eq "Static" -and $ValidateDns -eq $true) {
 			# Adding all of the required parameters to validate DNS things
 			$validate = @{
@@ -240,8 +253,23 @@ Function New-NSXVManager {
 		# Configuring the OVF Template and deploying the appliance
 		$ovfconfig = New-Configuration
 		if ($ovfconfig) {
-			if ($PsCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) { Import-Appliance -Verbose:$VerbosePreference }
+			if ($PsCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) {
+				$sImpApp = @{
+					OVFPath = $OVFPath.FullName
+					ovfconfig = $ovfconfig
+					Name = $Name
+					VMHost = $VMHost
+					InventoryLocation = $InventoryLocation
+					Location = $Location
+					Datastore = $Datastore
+					DiskStorageFormat = $DiskFormat
+					Verbose = $VerbosePreference
+				}
+				Import-Appliance @sImpApp
+			}
+			
 			else { 
+				# Logging out the OVF Configuration values if -WhatIf is invoked
 				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
 			}
 		}
