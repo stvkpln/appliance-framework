@@ -63,16 +63,16 @@ InModuleScope -ModuleName $moduleName {
             It 'Confirm-DNS - ValidateDns is $true - No A-record DNS resoution' {
                 {Confirm-DNS -FQDN $incorrectHost -DnsServers $badDnsServersA -ValidateDns $true} | 
                 Should -Throw "The provided DNS servers were unable to resolve the FQDN '$($incorrectHost)'"}
-            It 'Confirm-DNS - ValidateDns is $true - DNS resoution - Incorrect A-record IPAddress from DNS' {
+            It 'Confirm-DNS - ValidateDns is $true - DNS resolution - Incorrect A-record IPAddress from DNS' {
                 {Confirm-DNS -FQDN $correctHost -DnsServers $badDnsServersA -ValidateDns $true -IPAddress $correctIP}   | 
                 Should -Throw "The FQDN $($correctHost) is resolving to '$($incorrectIP)'"}
             It 'Confirm-DNS - ValidateDns is $true - No PTR-record DNS resoution' {
                 {Confirm-DNS -FQDN $correctHost -IPAddress $correctIP -DnsServers $DnsServersPtrEmpty -ValidateDns $true} | 
                 Should -Throw "The provided DNS servers were unable to resolve the IP Address '$($correctIP)' to a FQDN."}
-            It 'Confirm-DNS - ValidateDns is $true - DNS resoution - Incorrect PTR-record HostName from DNS' {
+            It 'Confirm-DNS - ValidateDns is $true - DNS resolution - Incorrect PTR-record HostName from DNS' {
                 {Confirm-DNS -FQDN $correctHost -DnsServers $badDnsServersPtr -ValidateDns $true -IPAddress $correctIP}   | 
                 Should -Throw "The IP Address '$($correctIP)' is resolving to a hostname of '$($incorrectHost)'"}
-                It 'Confirm-DNS - ValidateDns is $true - DNS resoution - Correct A-record & PTR-record from DNS' {
+                It 'Confirm-DNS - ValidateDns is $true - DNS resolution - Correct A-record & PTR-record from DNS' {
                 Confirm-DNS -FQDN $correctHost -IPAddress $correctIP -DnsServers $dnsServersOK -ValidateDns $true | 
                 Should -Be "$($correctHost)"}
         }
