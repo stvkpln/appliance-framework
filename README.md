@@ -1,6 +1,6 @@
 # OVA/OVF Appliance Import Framework
-  * Version: 0.6-BETA
-  * Last Update: 2018-01-15
+  * Version: 0.7-BETA
+  * Last Update: 2018-JAN-21
 
 ## General Information
 This module provides a framework to provide a normalized set of parameters to import virtual appliances in OVA or OVF formats into VMware vSphere environments via PowerCLI. In addition to normalized inputs, this framework provides validation of specific infrastructure actions to reduce the possibility of an error:
@@ -19,7 +19,7 @@ For more information about specific appliance options, please use Get-Help <func
 
 ## Current Appliances Supported:
 * Identity Manager 2.9.x
-* NSX-V Manager
+* NSX-V Manager 6.3.x
 * vRealize Automation 7.x
 * vRealize Business 7.x
 * vRealize Log Insight 4.x

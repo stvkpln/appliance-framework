@@ -91,8 +91,8 @@ Function New-vRealizeLogInsightAppliance {
 		.Parameter PowerOn
 			Specifies whether to power on the imported appliance once the import completes.
 
-		.Parameter NoClobber
-			Indicates that the function will not remove and replace an existing virtual machine. By default, if a virtual machine with the specifies name exists, the function will fail. If setting this value to 'False', the existing virtual machine will be stopped and removed from the infrastructure permanently.
+		.Parameter AllowClobber
+			Indicates whether or not to replace an existing virtual machine, if discovered. The default behavior (set to 'False'), the function will fail with an error that there is an esisting virtual machine. If set to true, the discovered virtual machine will be stopped and removed permanently from the infrastructure *WITHOUT PROMPTING*. Use careuflly!
 
 		.Notes
 			Author: Steve Kaplan (steve@intolerable.net)
@@ -152,11 +152,11 @@ Function New-vRealizeLogInsightAppliance {
 	[CmdletBinding(SupportsShouldProcess=$true,DefaultParameterSetName="Static")]
 	[OutputType('VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine')]
 	Param (
+		[Alias("OVA","OVF")]
 		[Parameter(Mandatory=$true,ParameterSetName="Static")]
 		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
-		[Alias("OVA","OVF")]
-		[ValidateScript( { Confirm-FilePath $_ } )][
-		System.IO.FileInfo]$OVFPath,
+		[ValidateScript( { Confirm-FileExtension -File $_ } )]
+		[System.IO.FileInfo]$OVFPath,
 
 		[Parameter(Mandatory=$true,ParameterSetName="Static")]
 		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
@@ -248,11 +248,14 @@ Function New-vRealizeLogInsightAppliance {
 
 		[Parameter(ParameterSetName="Static")]
 		[Parameter(ParameterSetName="DHCP")]
-		[Switch]$NoClobber = $true
+		[Switch]$AllowClobber = $false
 
 	)
 
 	Function New-Configuration {
+		# Setting the name of the function and invoking opening verbose logging message
+		Write-Verbose -Message (Get-FormattedMessage -Message "$($MyInvocation.MyCommand) Started execution")
+
 		$Status = "Configuring Appliance Values"
 		Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Extracting OVF Template"
 		$ovfconfig = Get-OvfConfiguration -OvF $OVFPath.FullName
@@ -287,7 +290,10 @@ Function New-vRealizeLogInsightAppliance {
 			$ovfconfig
 		}
 		
-		else { throw "The provided file '$($OVFPath)' is not a valid OVA/OVF; please check the path/file and try again" }
+		else { throw "$($invalidFile) $($OVFPath)" }
+
+		# Verbose logging output to finish things off
+		Write-Verbose -Message (Get-FormattedMessage -Message "$($MyInvocation.MyCommand) Finished execution")
 	}
 
 	# Workflow to provision the vRealize Log Insight Virtual Appliance
@@ -295,9 +301,10 @@ Function New-vRealizeLogInsightAppliance {
 		$Activity = "Deploying a new vRealize Log Insight Appliance"
 		
 		# Validating Components
-		Confirm-VM -Name $Name -NoClobber $NoClobber
+		Confirm-VM -Name $Name -AllowClobber $AllowClobber
 		$VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
-		Confirm-BackingNetwork -Network $Network -Verbose:$VerbosePreference
+		Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Verbose:$VerbosePreference
+
 		$sGateway = @{
 			IPAddress = $IPAddress
 			FourthOctet = $FourthOctet
@@ -327,15 +334,22 @@ Function New-vRealizeLogInsightAppliance {
 		if ($ovfconfig) {
 			if ($PSCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) {
 				$sImpApp = @{
-					Name = $Name
-					DiskFormat = $DiskFormat
-					VMHost = $VMHost
+
+					OVFPath = $OVFPath.FullName
 					ovfconfig = $ovfconfig
+					Name = $Name
+					VMHost = $VMHost
+					InventoryLocation = $InventoryLocation
+					Location = $Location
+					Datastore = $Datastore
+					DiskStorageFormat = $DiskFormat
 					Verbose = $VerbosePreference
 				}
-				 Import-Appliance @sImpApp
+				Import-Appliance @sImpApp
 			}
+
 			else { 
+				# Logging out the OVF Configuration values if -WhatIf is invoked
 				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
 			}
 		}
