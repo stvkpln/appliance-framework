@@ -267,7 +267,7 @@ Function New-NSXVManager {
 				}
 				Import-Appliance @sImpApp
 			}
-			
+
 			else { 
 				# Logging out the OVF Configuration values if -WhatIf is invoked
 				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }

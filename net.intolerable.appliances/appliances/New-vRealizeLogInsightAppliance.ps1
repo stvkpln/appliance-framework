@@ -304,6 +304,7 @@ Function New-vRealizeLogInsightAppliance {
 		Confirm-VM -Name $Name -AllowClobber $AllowClobber
 		$VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
 		Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Verbose:$VerbosePreference
+
 		$sGateway = @{
 			IPAddress = $IPAddress
 			FourthOctet = $FourthOctet
@@ -333,6 +334,7 @@ Function New-vRealizeLogInsightAppliance {
 		if ($ovfconfig) {
 			if ($PSCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) {
 				$sImpApp = @{
+
 					OVFPath = $OVFPath.FullName
 					ovfconfig = $ovfconfig
 					Name = $Name
@@ -345,7 +347,7 @@ Function New-vRealizeLogInsightAppliance {
 				}
 				Import-Appliance @sImpApp
 			}
-			
+
 			else { 
 				# Logging out the OVF Configuration values if -WhatIf is invoked
 				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }

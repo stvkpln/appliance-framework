@@ -271,9 +271,10 @@ Function New-vRealizeAutomationAppliance {
 		$Activity = "Deploying a new vRealize Automation Appliance"
 
 		# Validating Components
-        Confirm-VM -Name $Name -AllowClobber $AllowClobber
-        $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
-        Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Verbose:$VerbosePreference
+		Confirm-VM -Name $Name -AllowClobber $AllowClobber
+    $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
+    Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Verbose:$VerbosePreference
+
 		$sGateway = @{
 			IPAddress = $IPAddress
 			FourthOctet = $FourthOctet
@@ -315,7 +316,7 @@ Function New-vRealizeAutomationAppliance {
 				}
 				Import-Appliance @sImpApp
 			}
-			
+
 			else { 
 				# Logging out the OVF Configuration values if -WhatIf is invoked
 				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }

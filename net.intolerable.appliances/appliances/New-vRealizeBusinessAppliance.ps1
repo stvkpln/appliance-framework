@@ -239,6 +239,9 @@ Function New-vRealizeBusinessAppliance {
 	)
 
 	Function New-Configuration {
+		# Setting the name of the function and invoking opening verbose logging message
+		Write-Verbose -Message (Get-FormattedMessage -Message "$($MyInvocation.MyCommand) Started execution")
+
 		$Status = "Configuring Appliance Values"
 		Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Extracting OVF Template"
 		$ovfconfig = Get-OvfConfiguration -OvF $OVFPath.FullName
@@ -287,6 +290,7 @@ Function New-vRealizeBusinessAppliance {
         Confirm-VM -Name $Name -AllowClobber $AllowClobber
         $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
         Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Verbose:$VerbosePreference
+
 		$sGateway = @{
 			IPAddress = $IPAddress
 			FourthOctet = $FourthOctet
@@ -328,7 +332,7 @@ Function New-vRealizeBusinessAppliance {
 				}
 				Import-Appliance @sImpApp
 			}
-			
+
 			else { 
 				# Logging out the OVF Configuration values if -WhatIf is invoked
 				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }

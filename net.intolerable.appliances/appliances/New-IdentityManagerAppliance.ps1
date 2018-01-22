@@ -207,6 +207,7 @@ Function New-IdentityManagerAppliance {
 	)
 
 	Function New-Configuration {
+
 		# Setting the name of the function and invoking opening verbose logging message
 		Write-Verbose -Message (Get-FormattedMessage -Message "$($MyInvocation.MyCommand) Started execution")
 		
@@ -250,8 +251,9 @@ Function New-IdentityManagerAppliance {
 		# Validating Components
 		Confirm-VM -Name $Name -AllowClobber $AllowClobber
 		$VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
-        Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Verbose:$VerbosePreference
-		$sGateway = @{
+    Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Verbose:$VerbosePreference
+
+    $sGateway = @{
 			IPAddress = $IPAddress
 			FourthOctet = $FourthOctet
 			SubnetMask = $SubnetMask
