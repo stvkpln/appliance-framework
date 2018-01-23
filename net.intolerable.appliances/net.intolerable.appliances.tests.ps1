@@ -76,5 +76,86 @@ InModuleScope -ModuleName $moduleName {
                 Confirm-DNS -FQDN $correctHost -IPAddress $correctIP -DnsServers $dnsServersOK -ValidateDns $true | 
                 Should -Be "$($correctHost)"}
         }
+ 
+        Context 'Confirm-VM' { 
+            $Activity = 'Deploying a new xyz Appliance' 
+            $vmExistPoweredOn = 'VMExistPoweredOn' 
+            $vmExistPoweredOff = 'VMExistPoweredOff' 
+            $vmExistSuspended = 'VMExistSuspended' 
+            $vmNotExist = 'VMNotExist' 
+
+            Mock -CommandName 'Get-VM' ` 
+                -ParameterFilter {$Name -eq $vmExistPoweredOn} ` 
+                -MockWith { 
+                    @{ 
+                        Name = $vmExistPoweredOn 
+                        PowerState = 'PoweredOn' 
+                    } 
+                } 
+            Mock -CommandName 'Get-VM' ` 
+                -ParameterFilter {$Name -eq $vmExistPoweredOff} ` 
+                -MockWith { 
+                    @{ 
+                        Name = $vmExistPoweredOff 
+                        PowerState = 'PoweredOff' 
+                    } 
+                } 
+            Mock -CommandName 'Get-VM' ` 
+                -ParameterFilter {$Name -eq $vmExistSuspended} ` 
+                -MockWith { 
+                    @{ 
+                        Name = $vmExistPoweredOff 
+                        PowerState = 'Suspended' 
+                    } 
+                } 
+            Mock -CommandName 'Get-VM' ` 
+                -ParameterFilter {$Name -eq $vmNotExist} ` 
+                -MockWith {$null} 
+            Mock -CommandName 'Stop-VM' ` 
+                -MockWith { 
+                    @{ 
+                        Name = 'VM' 
+                        PowerState = 'PoweredOff' 
+                    } 
+                } 
+            Mock -CommandName 'Remove-VM' -MockWith {$null} 
+
+            It 'VM exists - AllowClobber (default)' { 
+                Confirm-VM -Name $vmExistPoweredOn 
+                Should -Throw "There is already a VM with the name $($vmExist)." 
+            } 
+            It 'VM exists - AllowClobber is $false' { 
+                Confirm-VM -Name $vmExistPoweredOn -AllowClobber:$false 
+                Should -Throw "There is already a VM with the name $($vmExist)." 
+            } 
+            It 'VM exists - AllowClobber is $true' { 
+                Confirm-VM -Name $vmExistPoweredOn -AllowClobber:$true 
+                Should -BeNullOrEmpty 
+            } 
+            It 'VM exists - AllowClobber (default)' { 
+                Confirm-VM -Name $vmExistPoweredOff 
+                Should -Throw "There is already a VM with the name $($vmExist)." 
+            } 
+            It 'VM exists - AllowClobber is $false' { 
+                Confirm-VM -Name $vmExistPoweredOff -AllowClobber:$false 
+                Should -Throw "There is already a VM with the name $($vmExist)." 
+            } 
+            It 'VM exists - AllowClobber is $true' { 
+                Confirm-VM -Name $vmExistPoweredOff -AllowClobber:$false 
+                Should -BeNullOrEmpty 
+            } 
+            It 'VM exists - AllowClobber (default)' { 
+                Confirm-VM -Name $vmExistSuspended 
+                Should -Throw "There is already a VM with the name $($vmExist)." 
+            } 
+            It 'VM exists - AllowClobber is $false' { 
+                Confirm-VM -Name $vmExistSuspended -AllowClobber:$false 
+                Should -Throw "There is already a VM with the name $($vmExist)." 
+            } 
+            It 'VM exists - AllowClobber is $true' { 
+                Confirm-VM -Name $vmExistSuspended -AllowClobber:$false 
+                Should -BeNullOrEmpty 
+            } 
+        }
     }
-}
+} 
