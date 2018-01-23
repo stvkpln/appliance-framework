@@ -1,4 +1,5 @@
 Function Confirm-VM {
+    [CmdletBinding(SupportsShouldProcess = $true)]
 	Param (
 		[string]$Name,
 		[bool]$AllowClobber
@@ -7,7 +8,7 @@ Function Confirm-VM {
 	# Setting the name of the function and invoking opening verbose logging message
 	Write-Verbose -Message (Get-FormattedMessage -Message "$($MyInvocation.MyCommand) Started execution")
 
-	if ($AllowClobber -eq $true) { Write-Warning -Message (Get-FormattedMessage) "The 'AllowClobber' parameter has been set to 'True'. If a virtual machine with the requested name is discovered, it will automatically be destroyed." }
+#	if ($AllowClobber -eq $true) { Write-Warning -Message (Get-FormattedMessage) "The 'AllowClobber' parameter has been set to 'True'. If a virtual machine with the requested name is discovered, it will automatically be destroyed." }
 
 	# Checking whether there is a virtual machine with this name in the inventory of all currently connected vCenter servers
 	$vm = Get-VM -Name $Name -ErrorAction SilentlyContinue
