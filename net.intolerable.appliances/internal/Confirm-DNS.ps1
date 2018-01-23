@@ -32,7 +32,7 @@ Function Confirm-DNS {
 	# Whether or not to validate DNS entries 
 	switch ($ValidateDns) {
 		$false { 
-			Write-Verbose -Message (Get-FormattedMessage) "DNS Validation has been disabled for this appliance provisioning operation. Confirmation of both forward and reverse lookup records will be skipped." 
+			Write-Verbose -Message (Get-FormattedMessage -Message "DNS Validation has been disabled for this appliance provisioning operation. Confirmation of both forward and reverse lookup records will be skipped.")
 			break
 		}
 
