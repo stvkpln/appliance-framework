@@ -31,7 +31,8 @@ Function Set-DefaultGateway {
 		$ipaddr -join "."
 	}
 
-	else { throw "Default gateway must be provided due to the subnet mask not being a standard /24. Provide using the -Gateway parameter" }
+	elseif ($SubnetMask -ne "255.255.255.0") { throw "A default gateway could not be automatically configured due to the subnet mask not being a standard class C (/24). Provide a default gateway using the -Gateway parameter." }
+	elseif (!$FourthOctet) { throw "A default gateway could not be automatically configured due to the default fourth octet value not being defined. Either define in the config.json file in the module root directory or provide a default gateway value using the '-Gateway' parameter." }
 
 	# Verbose logging output to finish things off
 	Write-Verbose -Message (Get-FormattedMessage -Message "$($MyInvocation.MyCommand) Finished execution")

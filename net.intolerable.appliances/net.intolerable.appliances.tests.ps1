@@ -210,5 +210,68 @@ InModuleScope -ModuleName $moduleName {
                 Confirm-VM -Name $vmExistSuspended -AllowClobber:true |
                 Should -BeNullOrEmpty} 
         }
+
+        Context 'Set-DefaultGateway' {
+			$FourthOctet = "1"
+			$Gateway = "10.0.0.1"
+			$IPAddress = "10.0.0.100"
+			$Mask23 = "255.255.254.0"
+			$Mask24 = "255.255.255.0"
+			
+			It 'Static Assignment' {
+				Set-DefaultGateway -Gateway $Gateway |
+				Should -BeExactly $Gateway
+			}
+			
+			It 'Confgured From Defaults With a Class C Mask' {
+				Set-DefaultGateway -IPAddress $IPAddress -SubnetMask $Mask24 -FourthOctet $FourthOctet |
+				Should -BeExactly $Gateway
+			}
+
+			It 'Confgured From Defaults With a non-Class C Mask' {
+				{ Set-DefaultGateway -IPAddress $IPAddress -SubnetMask $Mask23 -FourthOctet $FourthOctet } |
+				Should -Throw "A default gateway could not be automatically configured due to the subnet mask not being a standard class C (/24). Provide a default gateway using the -Gateway parameter."
+			}
+		
+			It 'No available fourth octet value' {
+				{ Set-DefaultGateway -IPAddress $IPAddress -SubnetMask $Mask24 } |
+				Should -Throw "A default gateway could not be automatically configured due to the default fourth octet value not being defined. Either define in the config.json file in the module root directory or provide a default gateway value using the '-Gateway' parameter."
+			}
+		}
+
+        Context 'Confirm-BackingNetwork' {
+			$dvVMHdvPG = 'DistributedPortgroup'
+			$dvVMHstPG = 'StandardPortgroup'
+			$dvVMHstPG = 'StandardPortgroup'
+			$stVMHstPG = 'StandardPortgroup'
+
+			Mock -Command 'Get-VDSwitch' `
+				-ParameterFilter { $Network  } `
+				-MockWith {
+					@{ Name = 'DistributedSwitch' }
+				}
+
+			Mock -Command 'Get-VDSwitch' `
+				-ParameterFilter { $VMHost -eq $stVMHost } `
+				-MockWith { $null }
+
+			Mock -Command 'Get-VDPortgroup' `
+				-ParameterFilter { $Name -eq $dvPortgroup } `
+				-MockWith {
+					@{ Name = 'DistributedPortgroup' }
+				}
+
+			Mock -Command 'Get-VDPortgroup' `
+				-ParameterFilter { $Name -eq $stPortgroup }`
+				-MockWith { $null }
+
+			It 'Backing Network - VMHost with Distributed vSwitch(es) - Distributed Portgroup' {
+				Confirm-BackingNetwork -Network $dvPortgroup -VMHost $dvVMHost | Should -BeNullOrEmpty
+			}
+
+			It 'Backing Network - VMHost with Distributed vSwitch(es) - Standard Portgroup' {
+				Confirm-BackingNetwork -Network $stPortgroup -VMHost $dvVMHost
+			}
+		}
     }
 } 
