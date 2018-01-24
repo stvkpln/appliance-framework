@@ -7,7 +7,8 @@ Function Confirm-BackingNetwork {
 	[CmdletBinding()]
 	param(
 		[string]$Network,
-		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]$VMHost
+        [ValidateScript({$_ -is [System.String] -or $_ -is [VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]})]
+		[PSObject]$VMHost
 	)
 
 	# Setting the name of the function and invoking opening verbose logging message
