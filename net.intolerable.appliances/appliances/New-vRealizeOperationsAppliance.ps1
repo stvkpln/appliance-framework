@@ -275,23 +275,26 @@ Function New-vRealizeOperationsAppliance {
 		$Activity = "Deploying a new vRealize Operations Appliance"
 		
 		# Validating Components
-        Confirm-VM -Name $Name -AllowClobber $AllowClobber
-        $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
-        Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Verbose:$VerbosePreference
-		$sGateway = @{
+		Confirm-VM -Name $Name -AllowClobber $AllowClobber -Activity $Activity -Verbose:$VerbosePreference
+		$VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Activity $Activity -Verbose:$VerbosePreference
+		Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Activity $Activity -Verbose:$VerbosePreference
+
+		# Confirming / Setting Default Gateway
+		$GatewayParams = @{
 			IPAddress = $IPAddress
 			FourthOctet = $FourthOctet
 			SubnetMask = $SubnetMask
 			Gateway = $Gateway
+			Activity = $Activity
 			Verbose = $VerbosePreference
 		}
-		$Gateway = Set-DefaultGateway @sGateway
+		$Gateway = Set-DefaultGateway @GatewayParams
 
 		# Configuring the OVF Template and deploying the appliance
 		$ovfconfig = New-Configuration
 		if ($ovfconfig) {
 			if ($PSCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) {
-				$sImpApp = @{
+				$AppliancePayload = @{
 					OVFPath = $OVFPath.FullName
 					ovfconfig = $ovfconfig
 					Name = $Name
@@ -302,18 +305,18 @@ Function New-vRealizeOperationsAppliance {
 					DiskStorageFormat = $DiskFormat
 					Verbose = $VerbosePreference
 				}
-				Import-Appliance @sImpApp
+				Import-Appliance @AppliancePayload
 			}
-			
+
 			else { 
 				# Logging out the OVF Configuration values if -WhatIf is invoked
 				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
 			}
 		}
-		
+
 		else { throw $noOvfConfiguration }
 	}
-	
+
 	catch { Write-Error $_ }
 }
 

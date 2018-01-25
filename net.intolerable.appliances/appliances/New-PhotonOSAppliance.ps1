@@ -119,15 +119,15 @@ Function New-PhotonOSAppliance {
 		$Activity = "Deploying a new Photon OS Appliance"
 
 		# Validating Components
-        Confirm-VM -Name $Name -AllowClobber $AllowClobber
-        $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
-        Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Verbose:$VerbosePreference
+		Confirm-VM -Name $Name -AllowClobber $AllowClobber -Activity $Activity -Verbose:$VerbosePreference
+		$VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Activity $Activity -Verbose:$VerbosePreference
+		Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Activity $Activity -Verbose:$VerbosePreference
 
 		# Configuring the OVF Template and deploying the appliance
         $ovfconfig = New-Configuration -Verbose:$VerbosePreference
 		if ($ovfconfig) {
 			if ($PsCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) {
-				$sImpApp = @{
+				$AppliancePayload = @{
 					OVFPath = $OVFPath.FullName
 					ovfconfig = $ovfconfig
 					Name = $Name
@@ -138,7 +138,7 @@ Function New-PhotonOSAppliance {
 					DiskStorageFormat = $DiskFormat
 					Verbose = $VerbosePreference
 				}
-				Import-Appliance @sImpApp
+				Import-Appliance @AppliancePayload
 			}
 
 			else { 

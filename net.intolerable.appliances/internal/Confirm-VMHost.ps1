@@ -8,7 +8,8 @@
 Function Confirm-VMHost {
 	Param (
 		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]$VMHost,
-		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]$Location
+		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]$Location,
+		[string]$Activity
 	)
 
 	# Setting the name of the function and invoking opening verbose logging message

@@ -8,7 +8,8 @@ Function Confirm-BackingNetwork {
 	param(
 		[string]$Network,
         [ValidateScript({$_ -is [System.String] -or $_ -is [VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]})]
-		[PSObject]$VMHost
+		[PSObject]$VMHost,
+		[string]$Activity
 	)
 
 	# Setting the name of the function and invoking opening verbose logging message

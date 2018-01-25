@@ -12,7 +12,8 @@ Function Set-DefaultGateway {
 		[string]$IPAddress,
 		[string]$FourthOctet,
 		[string]$SubnetMask,
-		[String]$Gateway
+		[String]$Gateway,
+		[string]$Activity
 	)
 
 	# Setting the name of the function and invoking opening verbose logging message
