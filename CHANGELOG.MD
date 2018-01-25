@@ -21,3 +21,7 @@
 * Added `-Standard` parameter on the `Get-VirtualPortgroup` check in the ```Confirm-BackingNetwork``` function
 * Added all passthrough variables as parameters on Import-Appliance and fixing up code on appliance wrappers
 * Added new function `Get-FormattedMessage` to format time and logging output to match up with PowerCLI date/time output
+* Added $Activity input parameter on all internal functions to allow for Write-Progress to provide activities as needed 
+* Updated input parameters on Confirm-BackingNetwork and Confirm-VMHost for PowerCLI objects to allow Pester tests to occur
+* Pester Unit Tests for: Confirm-BackingNetwork, Confirm-DNS, Confirm-VM, and Set-DefaultGateway
+* Removed Monolithic Pester tests file from module root!

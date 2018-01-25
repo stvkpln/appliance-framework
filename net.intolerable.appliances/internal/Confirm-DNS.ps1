@@ -15,7 +15,8 @@ Function Confirm-DNS {
 		[String]$FQDN,
 		[String]$IPAddress,
 		[String[]]$DnsServers,
-		[bool]$ValidateDns
+		[bool]$ValidateDns,
+		[string]$Activity
 	)
 
 	# Setting the name of the function and invoking opening verbose logging message

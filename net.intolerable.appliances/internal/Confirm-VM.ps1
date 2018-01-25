@@ -2,7 +2,8 @@ Function Confirm-VM {
     [CmdletBinding(SupportsShouldProcess = $true)]
 	Param (
 		[string]$Name,
-		[bool]$AllowClobber
+		[bool]$AllowClobber,
+		[String]$Activity
 	)
 
 	# Setting the name of the function and invoking opening verbose logging message

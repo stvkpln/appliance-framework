@@ -12,7 +12,8 @@ Function Import-Appliance {
 		[VMware.VimAutomation.ViCore.Types.V1.Inventory.Folder]$InventoryLocation,
 		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]$Location,
 		[VMware.VimAutomation.ViCore.Types.V1.DatastoreManagement.Datastore]$Datastore,
-		[string]$DiskFormat
+		[string]$DiskFormat,
+		[string]$Activity
 	)
 
 	# Defining Execution Parameters to pass into Import-VApp

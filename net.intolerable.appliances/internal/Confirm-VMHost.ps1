@@ -7,8 +7,13 @@
 #>
 Function Confirm-VMHost {
 	Param (
-		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]$VMHost,
-		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]$Location
+		[ValidateScript({$_ -is [System.Collections.Hashtable] -or $_ -is [VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]})]
+		[PSObject]$VMHost,
+		
+		[ValidateScript({$_ -is [System.Collections.Hashtable] -or $_ -is [VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]})]
+		[PSObject]$Location,
+		
+		[string]$Activity
 	)
 
 	# Setting the name of the function and invoking opening verbose logging message

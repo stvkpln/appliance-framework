@@ -271,19 +271,23 @@ Function New-vRealizeAutomationAppliance {
 		$Activity = "Deploying a new vRealize Automation Appliance"
 
 		# Validating Components
-		Confirm-VM -Name $Name -AllowClobber $AllowClobber
-    $VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Verbose:$VerbosePreference
-    Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Verbose:$VerbosePreference
+		Confirm-VM -Name $Name -AllowClobber $AllowClobber -Activity $Activity -Verbose:$VerbosePreference
+		$VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Activity $Activity -Verbose:$VerbosePreference
+		Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Activity $Activity -Verbose:$VerbosePreference
 
-		$sGateway = @{
+		# Confirming / Setting Default Gateway
+		$GatewayParams = @{
 			IPAddress = $IPAddress
 			FourthOctet = $FourthOctet
 			SubnetMask = $SubnetMask
 			Gateway = $Gateway
+			Activity = $Activity
 			Verbose = $VerbosePreference
 		}
-		$Gateway = Set-DefaultGateway @sGateway
-		if ($PsCmdlet.ParameterSetName -eq "Static" -and $ValidateDns -eq $true) {
+		$Gateway = Set-DefaultGateway @GatewayParams
+
+		# What to do if a static IP is provided
+		if ($PsCmdlet.ParameterSetName -eq "Static") {
 			# Adding all of the required parameters to validate DNS things
 			$validate = @{
 				Name       = $Name
@@ -292,6 +296,7 @@ Function New-vRealizeAutomationAppliance {
 				DnsServers = $DnsServers
 				FQDN       = $FQDN
 				ValidateDns = $ValidateDns
+				Activity = $Activity
 				Verbose    = $VerbosePreference
 			}
 
@@ -303,7 +308,7 @@ Function New-vRealizeAutomationAppliance {
 		$ovfconfig = New-Configuration
 		if ($ovfconfig) {
 			if ($PsCmdlet.ShouldProcess($OVFPath.FullName, "Import-Appliance")) {
-				$sImpApp = @{
+				$AppliancePayload = @{
 					OVFPath = $OVFPath.FullName
 					ovfconfig = $ovfconfig
 					Name = $Name
@@ -314,7 +319,7 @@ Function New-vRealizeAutomationAppliance {
 					DiskStorageFormat = $DiskFormat
 					Verbose = $VerbosePreference
 				}
-				Import-Appliance @sImpApp
+				Import-Appliance @AppliancePayload
 			}
 
 			else { 
@@ -322,7 +327,7 @@ Function New-vRealizeAutomationAppliance {
 				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
 			}
 		}
-		
+
 		else { throw $noOvfConfiguration }
 	}
 
