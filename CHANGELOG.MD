@@ -24,3 +24,4 @@
 * Added $Activity input parameter on all internal functions to allow for Write-Progress to provide activities as needed 
 * Updated input parameters on Confirm-BackingNetwork and Confirm-VMHost for PowerCLI objects to allow Pester tests to occur
 * Pester Unit Tests for: Confirm-BackingNetwork, Confirm-DNS, Confirm-VM, and Set-DefaultGateway
+* Removed Monolithic Pester tests file from module root!
