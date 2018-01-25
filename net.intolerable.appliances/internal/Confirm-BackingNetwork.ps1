@@ -7,8 +7,10 @@ Function Confirm-BackingNetwork {
 	[CmdletBinding()]
 	param(
 		[string]$Network,
-        [ValidateScript({$_ -is [System.String] -or $_ -is [VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]})]
+		
+		[ValidateScript({$_ -is [System.String] -or $_ -is [VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]})]
 		[PSObject]$VMHost,
+		
 		[string]$Activity
 	)
 
