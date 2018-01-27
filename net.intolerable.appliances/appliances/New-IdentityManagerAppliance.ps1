@@ -248,10 +248,17 @@ Function New-IdentityManagerAppliance {
 	try {
 		$Activity = "Deploying a new Identity Manager Appliance"
 
-		# Validating Components
-		Confirm-VM -Name $Name -AllowClobber $AllowClobber -Activity $Activity -Verbose:$VerbosePreference
-		$VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Activity $Activity -Verbose:$VerbosePreference
-		Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Activity $Activity -Verbose:$VerbosePreference
+        # Checking whether a virtual machine already exists in the infrastructure
+        Confirm-VM -Name $Name -AllowClobber $AllowClobber -Activity $Activity -Verbose:$VerbosePreference
+
+        # Validating / Setting Import Location
+        $ImportValidation = @{ Activity = $Activity; Verbose = $VerbosePreference }
+        if ($VMHost) { $ImportValidation.VMHost = $VMHost }
+        if ($Location) { $ImportValidation.Location = $Location }
+        $VMHost = Confirm-VMHost @ImportValidation
+
+        # Confirming that the requested network name exists and resides on the host that will be used for import
+        Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Activity $Activity -Verbose:$VerbosePreference
 		
 		# Confirming / Setting Default Gateway
 		$GatewayParams = @{

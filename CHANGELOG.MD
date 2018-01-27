@@ -25,3 +25,6 @@
 * Updated input parameters on Confirm-BackingNetwork and Confirm-VMHost for PowerCLI objects to allow Pester tests to occur
 * Pester Unit Tests for: Confirm-BackingNetwork, Confirm-DNS, Confirm-VM, and Set-DefaultGateway
 * Removed Monolithic Pester tests file from module root!
+
+# 0.7.1
+* Fixing an issue introduced while working on the plumbing for Pester unit test for `Confirm-VMHost`. Under the new logic, parameters `VMHost` and `Location` will only be passed into the function if they are provided by the wrapper workflow.

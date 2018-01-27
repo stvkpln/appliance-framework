@@ -298,10 +298,10 @@ Function New-vRealizeNetworkInsightAppliance {
 			$ovfconfig.Common.NTP.value = $NTPServers -join ","
 			$ovfconfig.Common.Web_Proxy_IP.value = $ProxyIP
 			$ovfconfig.Common.Web_Proxy_Port.value = $ProxyPort
-            if ($Type -eq "Proxy") { $ovfconfig.Common.Proxy_Shared_Secret.value = $ProxySharedSecret }
+			if ($Type -eq "Proxy") { $ovfconfig.Common.Proxy_Shared_Secret.value = $ProxySharedSecret }
 
-            # Verbose logging passthrough
-            Write-OVFValues -ovfconfig $ovfconfig -Type "Verbose" -Verbose:$VerbosePreference
+			# Verbose logging passthrough
+			Write-OVFValues -ovfconfig $ovfconfig -Type "Verbose" -Verbose:$VerbosePreference
 
 			# Returning the OVF Configuration to the function
 			$ovfconfig
@@ -317,9 +317,16 @@ Function New-vRealizeNetworkInsightAppliance {
 	try {
 		$Activity = "Deploying a new vRealize Network Insight appliance"
 		
-		# Validating Components
+		# Checking whether a virtual machine already exists in the infrastructure
 		Confirm-VM -Name $Name -AllowClobber $AllowClobber -Activity $Activity -Verbose:$VerbosePreference
-		$VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Activity $Activity -Verbose:$VerbosePreference
+
+		# Validating / Setting Import Location
+		$ImportValidation = @{ Activity = $Activity; Verbose = $VerbosePreference }
+		if ($VMHost) { $ImportValidation.VMHost = $VMHost }
+		if ($Location) { $ImportValidation.Location = $Location }
+		$VMHost = Confirm-VMHost @ImportValidation
+
+		# Confirming that the requested network name exists and resides on the host that will be used for import
 		Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Activity $Activity -Verbose:$VerbosePreference
 
 		# Confirming / Setting Default Gateway
