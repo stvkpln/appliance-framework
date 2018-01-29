@@ -135,7 +135,7 @@ Function New-vRealizeBusinessAppliance {
 			-----------
 			Deploy the vRealize Business appliance with DHCP settings and and do not power it on after the import finishes
 	#>
-    [CmdletBinding(SupportsShouldProcess=$true,DefaultParameterSetName="Static")]
+	[CmdletBinding(SupportsShouldProcess=$true,DefaultParameterSetName="Static")]
 	[OutputType('VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine')]
 	Param (
 		[Alias("OVA","OVF")]
@@ -267,10 +267,10 @@ Function New-vRealizeBusinessAppliance {
 				$ovfconfig.vami.$ApplianceType.DNS.value = $DnsServers -join ","
 				$ovfconfig.vami.$ApplianceType.domain.value = $Domain
 				if ($DnsSearchPath) { $ovfconfig.vami.$ApplianceType.searchpath.value = $DnsSearchPath -join "," }
-            }
+			}
 
-            # Verbose logging passthrough
-            Write-OVFValues -ovfconfig $ovfconfig -Type "Verbose" -Verbose:$VerbosePreference
+			# Verbose logging passthrough
+			Write-OVFValues -ovfconfig $ovfconfig -Type "Verbose" -Verbose:$VerbosePreference
 
 			# Returning the OVF Configuration to the function
 			$ovfconfig
@@ -286,9 +286,16 @@ Function New-vRealizeBusinessAppliance {
 	try {
 		$Activity = "Deploying a new vRealize Business Appliance"
 
-		# Validating Components
+		# Checking whether a virtual machine already exists in the infrastructure
 		Confirm-VM -Name $Name -AllowClobber $AllowClobber -Activity $Activity -Verbose:$VerbosePreference
-		$VMHost = Confirm-VMHost -VMHost $VMHost -Location $Location -Activity $Activity -Verbose:$VerbosePreference
+
+		# Validating / Setting Import Location
+		$ImportValidation = @{ Activity = $Activity; Verbose = $VerbosePreference }
+		if ($VMHost) { $ImportValidation.VMHost = $VMHost }
+		if ($Location) { $ImportValidation.Location = $Location }
+		$VMHost = Confirm-VMHost @ImportValidation
+
+		# Confirming that the requested network name exists and resides on the host that will be used for import
 		Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Activity $Activity -Verbose:$VerbosePreference
 
 		# Confirming / Setting Default Gateway
