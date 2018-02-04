@@ -28,3 +28,4 @@
 
 # 0.7.1
 * Fixing an issue introduced while working on the plumbing for Pester unit test for `Confirm-VMHost`. Under the new logic, parameters `VMHost` and `Location` will only be passed into the function if they are provided by the wrapper workflow.
+* Fix parameter input from appliance functions to `Import-Appliance` for storage format for VMDK's... oops!

@@ -4,15 +4,15 @@
 		If the 'PowerOn' flag is provided, the imported appliance will be powered on
 #>
 Function Import-Appliance {
-	param(
-		[String]$OVFPath,
+	Param (
+        [String]$OVFPath,
 		[VMware.VimAutomation.ViCore.Types.V1.Ovf.OvfConfiguration]$ovfconfig,
 		[string]$Name,
 		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]$VMHost,
 		[VMware.VimAutomation.ViCore.Types.V1.Inventory.Folder]$InventoryLocation,
 		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]$Location,
 		[VMware.VimAutomation.ViCore.Types.V1.DatastoreManagement.Datastore]$Datastore,
-		[string]$DiskFormat,
+        [string]$DiskStorageFormat,
 		[string]$Activity
 	)
 
