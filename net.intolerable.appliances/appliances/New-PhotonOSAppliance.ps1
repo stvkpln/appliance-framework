@@ -30,6 +30,9 @@ Function New-PhotonOSAppliance {
 		.Parameter Network
 			The name of the virtual portgroup to place the imported appliance. The portgroup can be either a standard or distributed virtual portgroup.
 
+		.Parameter Tags
+			Specifies the vSphere Tag(s) to apply to the imported virtual appliance.
+
 		.Parameter PowerOn
 			Specifies whether to power on the imported appliance once the import completes.
 
@@ -44,7 +47,7 @@ Function New-PhotonOSAppliance {
 		.Example
 			Connect-VIServer vCenter.example.com
 			
-			$config = {
+			$config = @{
 				OVFPath = "c:\temp\photon-os.ova"
 				Name = "PhotonOS1"
 				VMHost = (Get-VMHost -Name "host1.example.com")
@@ -85,6 +88,7 @@ Function New-PhotonOSAppliance {
 		[String]$Network,
 
 		# Lifecycle Parameters
+		[VMware.VimAutomation.ViCore.Types.V1.Tagging.Tag[]]$Tags,
 		[Switch]$PowerOn,
 		[Switch]$AllowClobber = $false
 	)
@@ -143,6 +147,8 @@ Function New-PhotonOSAppliance {
 					Location = $Location
 					Datastore = $Datastore
 					DiskStorageFormat = $DiskFormat
+					Tags = $Tags
+                    Activity = $Activity
 					Verbose = $VerbosePreference
 				}
 				Import-Appliance @AppliancePayload

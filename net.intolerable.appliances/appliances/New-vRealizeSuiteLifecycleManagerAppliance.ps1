@@ -76,6 +76,9 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
 		.Parameter ValidateDns
 			Specifies whether to perform DNS resolution validation of the networking information. If set to true, lookups for both forward (A) and reverse (PTR) records will be confirmed to match.
 
+		.Parameter Tags
+			Specifies the vSphere Tag(s) to apply to the imported virtual appliance.
+
 		.Parameter PowerOn
 			Specifies whether to power on the imported appliance once the import completes.
 
@@ -158,7 +161,7 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
 
 		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
-		[bool]$EnableCEIP,
+		[bool]$EnableCEIP = $true,
 
 		# SSL Certificate Parameters
 		[Alias("CommonName","CN")]
@@ -248,6 +251,10 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
 		# Lifecycle Parameters
 		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
+		[VMware.VimAutomation.ViCore.Types.V1.Tagging.Tag[]]$Tags,
+
+		[Parameter(ParameterSetName="DHCP")]
+		[Parameter(ParameterSetName="Static")]
 		[Switch]$PowerOn,
 
 		[Parameter(ParameterSetName="Static")]
@@ -267,7 +274,7 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
 
 			# Setting Basics Up
 			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Configuring Basic Values"
-			if ($EnableCEIP) { $ovfconfig.common.va_telemetry_enabled.value = $EnableCEIP }
+			$ovfconfig.common.va_telemetry_enabled.value = $EnableCEIP
 
 			# SSL Certificate Values
 			if ($CertCommonName) { $ovfconfig.Common.vlcm.cert.commonname.value = $CertCommonName }
@@ -363,7 +370,8 @@ Function New-vRealizeSuiteLifecycleManagerAppliance {
 					Location = $Location
 					Datastore = $Datastore
 					DiskStorageFormat = $DiskFormat
-					Activity = $Activity
+					Tags = $Tags
+                    Activity = $Activity
 					Verbose = $VerbosePreference
 				}
 				Import-Appliance @AppliancePayload

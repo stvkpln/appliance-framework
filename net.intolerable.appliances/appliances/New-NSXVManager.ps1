@@ -68,6 +68,9 @@ Function New-NSXVManager {
 		.Parameter NTPServers
 		The Network Time Protocol (NTP) servers to define for the imported appliance. Default NTP Servers to be used if none are specified are: 0.north-america.pool.ntp.org, 1.north-america.pool.ntp.org
 
+		.Parameter Tags
+			Specifies the vSphere Tag(s) to apply to the imported virtual appliance.
+
 		.Parameter PowerOn
 			Specifies whether to power on the imported appliance once the import completes.
 
@@ -128,7 +131,7 @@ Function New-NSXVManager {
 
 		[Alias("EnablePassword")]
 		[String]$CLIENPassword,
-		[Switch]$EnableSSH,
+		[Switch]$EnableSSH = $false,
 		[bool]$EnableCEIP = $true,
 
 		# Infrastructure Parameters
@@ -164,6 +167,7 @@ Function New-NSXVManager {
 		[String[]]$NTPServers = @("0.north-america.pool.ntp.org", "1.north-america.pool.ntp.org"),
 
 		# Lifecycle Parameters
+		[VMware.VimAutomation.ViCore.Types.V1.Tagging.Tag[]]$Tags,
 		[Switch]$PowerOn,
 		[Switch]$AllowClobber = $false
 	)
@@ -178,20 +182,14 @@ Function New-NSXVManager {
 
 			# Setting Basics Up
 			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Configuring Basic Values"
-			# Setting "admin" user password
-			$ovfconfig.Common.vsm_cli_passwd_0.value = $CLIPassword 
-
-			# Setting Enable password
+			$ovfconfig.Common.vsm_cli_passwd_0.value = $CLIPassword
 			if ($CLIENPassword) { $ovfconfig.Common.vsm_cli_en_passwd_0.value = $CLIENPassword }
 			else { 
 				Write-Warning "A CLI Enable Password was not provided. Using the same value as -CLIPassword"
 				$ovfconfig.Common.vsm_cli_en_passwd_0.value = $CLIPassword 
 			}
 
-			# Setting SSH Enablement value
-			if ($EnableSSH) { $ovfconfig.Common.vsm_isSSHEnabled.value = $true }
-
-			# Setting CEIP Enablement Value
+			$ovfconfig.Common.vsm_isSSHEnabled.value = $EnableSSH
 			$ovfconfig.Common.vsm_isCEIPEnabled.value = $EnableCEIP
 
 			# Setting Networking Values
@@ -276,6 +274,8 @@ Function New-NSXVManager {
 					Location = $Location
 					Datastore = $Datastore
 					DiskStorageFormat = $DiskFormat
+					Tags = $Tags
+                    Activity = $Activity
 					Verbose = $VerbosePreference
 				}
 				Import-Appliance @AppliancePayload

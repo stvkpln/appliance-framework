@@ -85,6 +85,9 @@ Function New-vRealizeOperationsAppliance {
 		.Parameter ValidateDns
 			Specifies whether to perform DNS resolution validation of the networking information. If set to true, lookups for both forward (A) and reverse (PTR) records will be confirmed to match.
 
+		.Parameter Tags
+			Specifies the vSphere Tag(s) to apply to the imported virtual appliance.
+	
 		.Parameter PowerOn
 			Specifies whether to power on the imported appliance once the import completes.
 
@@ -223,6 +226,10 @@ Function New-vRealizeOperationsAppliance {
 		# Lifecycle Parameters
 		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
+		[VMware.VimAutomation.ViCore.Types.V1.Tagging.Tag[]]$Tags,
+
+		[Parameter(ParameterSetName="DHCP")]
+		[Parameter(ParameterSetName="Static")]
 		[Switch]$PowerOn,
 
 		[Parameter(ParameterSetName="Static")]
@@ -310,6 +317,8 @@ Function New-vRealizeOperationsAppliance {
 					Location = $Location
 					Datastore = $Datastore
 					DiskStorageFormat = $DiskFormat
+					Tags = $Tags
+                    Activity = $Activity
 					Verbose = $VerbosePreference
 				}
 				Import-Appliance @AppliancePayload

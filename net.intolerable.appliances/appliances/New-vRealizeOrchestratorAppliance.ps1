@@ -1,16 +1,27 @@
-Function New-IdentityManagerAppliance {
+Function New-vRealizeOrchestratorAppliance {
 	<#
 		.Synopsis
-			Deploy a new Identity Manager virtual appliance
+			Deploy a new vRealize Orchestrator appliance
 
 		.Description
-			Deploys an Identity Manager appliance from a specified OVA/OVF file
+			Deploys a vRealize Orchestrator appliance from a specified OVA/OVF file
 
 		.Parameter OVFPath
 			Specifies the path to the OVF or OVA package that you want to deploy the appliance from.
 
 		.Parameter Name
 			Specifies a name for the imported appliance.
+
+		.Parameter RootPassword
+			A root password can be set if desired and will override any already set password. If not, but guest customization is running, then it will be randomly generated. Otherwise the password will be blank, and will be required to change in the console before using SSH. For security reasons, it is recommended to use a password that is a minimum of eight characters and contains a minimum of one upper, one lower, one digit, and one special character.
+
+		.Parameter EnableSSH
+			Specifies whether or not to enable SSH for remote access to the appliance. Enabling SSH service is not recommended for security reasons. The default value will leave SSH disabled.
+
+		.Parameter EnableCEIP
+			Specifies whether to enable VMware's Customer Experience Improvement Program ("CEIP"). The default will enable CEIP.
+
+			VMware's Customer Experience Improvement Program ("CEIP") provides VMware with information that enables VMware to improve its products and services, to fix problems, and to advise you on how best to deploy and use our products.  As part of the CEIP, VMware collects technical information about your organization's use of VMware products and services on a regular basis in association with your organization's VMware license key(s). This information does not personally identify any individual. For additional information regarding the data collected through CEIP and the purposes for which it is used by VMware is set forth in the Trust & Assurance Center at http://www.vmware.com/trustvmware/ceip.html.
 
 		.Parameter VMHost
 			Specifies a host where you want to run the appliance.
@@ -60,9 +71,6 @@ Function New-IdentityManagerAppliance {
 		.Parameter ValidateDns
 			Specifies whether to perform DNS resolution validation of the networking information. If set to true, lookups for both forward (A) and reverse (PTR) records will be confirmed to match.
 
-		.Parameter Secure
-			Specifies whether to apply virtual machine VMX advanced option hardening specifications once the import completes.
-
 		.Parameter Tags
 			Specifies the vSphere Tag(s) to apply to the imported virtual appliance.
 
@@ -81,12 +89,14 @@ Function New-IdentityManagerAppliance {
 			Connect-VIServer vCenter.example.com
 			
 			$config = @{
-				OVFPath = "c:\temp\identity-manager.ova"
-				Name = "vIDM1"
+				OVFPath = "c:\temp\vrealize-automation.ova"
+				Name = "vRA1"
+				RootPassword = "VMware1!"
+				EnableSSH = $true
 				VMHost = (Get-VMHost -Name "host1.example.com")
 				InventoryLocation = (Get-Folder -Type VM -Name "Appliances")
 				Network = "admin-network"
-				IPAddress = "10.10.10.31" 
+				IPAddress = "10.10.10.11" 
 				SubnetMask = "255.255.255.0" 
 				Gateway = "10.10.10.1"
 				Domain = "example.com"
@@ -96,64 +106,80 @@ Function New-IdentityManagerAppliance {
 				Verbose = $true
 			}
 
-			New-IdentityManagerAppliance @config
+			New-vRealizeOrchestratorAppliance @config
 
 			Description
 			-----------
-			Deploy the Identity Manager appliance with static IP settings and power it on after the import finishes. 
+			Deploy the vRealize Orchestrator appliance with static IP settings and power it on after the import finishes. 
 			In this example, the Verbose flag is being passed, so all OVF properties will be shown as part of the output
 
 		.Example
 			Connect-VIServer vCenter.example.com
 			
 			$config = @{
-				OVFPath = "c:\temp\identity-manager.ova"
-				Name = "vIDM1"
+				OVFPath = "c:\temp\vrealize-automation.ova"
+				Name = "vRA1"
+				RootPassword = "VMware1!"
+				EnableSSH = $true
 				VMHost = (Get-VMHost -Name "host1.example.com")
-				InventoryLocation = (Get-Folder -Type VM -Name "Applianceas")
+				InventoryLocation = (Get-Folder -Type VM -Name "Appliances")
 				Network = "admin-network"
 				DHCP = $true
 				PowerOn = $false
 			}
 
-			New-IdentityManagerAppliance @config
+			New-vRealizeOrchestratorAppliance @config
 
 			Description
 			-----------
-			Deploy the Identity Manager appliance with DHCP settings and and do not power it on after the import finishes
+			Deploy the vRealize Orchestrator appliance with DHCP settings and and do not power it on after the import finishes
 	#>
-    [CmdletBinding(SupportsShouldProcess = $true,DefaultParameterSetName = "Static")]
+	[CmdletBinding(SupportsShouldProcess=$true,DefaultParameterSetName="Static")]
 	[OutputType('VMware.VimAutomation.ViCore.Types.V1.Inventory.VirtualMachine')]
 	Param (
-		[Parameter(Mandatory=$true,ParameterSetName="Static")]
+		[Alias("OVA","OVF")]
 		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
+		[Parameter(Mandatory=$true,ParameterSetName="Static")]
 		[ValidateScript( { Confirm-FileExtension -File $_ } )]
 		[System.IO.FileInfo]$OVFPath,
 
-		[Parameter(Mandatory=$true,ParameterSetName="Static")]
 		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
+		[Parameter(Mandatory=$true,ParameterSetName="Static")]
 		[ValidateNotNullOrEmpty()]
 		[String]$Name,
 
-		# Infrastructure Parameters
-		[Parameter(ParameterSetName="Static")]
+		[Parameter(Mandatory=$true,ParameterSetName="DHCP")]
+		[Parameter(Mandatory=$true,ParameterSetName="Static")]
+		[ValidateNotNullOrEmpty()]
+		[String]$RootPassword,
+
 		[Parameter(ParameterSetName="DHCP")]
+		[Parameter(ParameterSetName="Static")]
+		[Switch]$EnableSSH = $false,
+
+		[Parameter(ParameterSetName="DHCP")]
+		[Parameter(ParameterSetName="Static")]
+		[bool]$EnableCEIP = $true,
+
+		# Infrastructure Parameters
+		[Parameter(ParameterSetName="DHCP")]
+		[Parameter(ParameterSetName="Static")]
 		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VMHost]$VMHost,
 
-		[Parameter(ParameterSetName="Static")]
 		[Parameter(ParameterSetName="DHCP")]
+		[Parameter(ParameterSetName="Static")]
 		[VMware.VimAutomation.ViCore.Types.V1.Inventory.Folder]$InventoryLocation,
 
-		[Parameter(ParameterSetName="Static")]
 		[Parameter(ParameterSetName="DHCP")]
+		[Parameter(ParameterSetName="Static")]
 		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]$Location,
 
-		[Parameter(ParameterSetName="Static")]
 		[Parameter(ParameterSetName="DHCP")]
+		[Parameter(ParameterSetName="Static")]
 		[VMware.VimAutomation.ViCore.Types.V1.DatastoreManagement.Datastore]$Datastore,
 
-		[Parameter(ParameterSetName="Static")]
 		[Parameter(ParameterSetName="DHCP")]
+		[Parameter(ParameterSetName="Static")]
 		[ValidateSet("Thick","Thick2GB","Thin","Thin2GB","EagerZeroedThick")]
 		[String]$DiskFormat = "thin",
 
@@ -162,8 +188,8 @@ Function New-IdentityManagerAppliance {
 		[Parameter(Mandatory=$true,ParameterSetName="Static")]
 		[String]$Network,
 
-		[Parameter(ParameterSetName="Static")]
 		[Parameter(ParameterSetName="DHCP")]
+		[Parameter(ParameterSetName="Static")]
 		[ValidateSet("IPv4","IPv6")]
 		[String]$IPProtocol = "IPv4",
 
@@ -204,8 +230,8 @@ Function New-IdentityManagerAppliance {
 		[Parameter(ParameterSetName="DHCP")]
 		[VMware.VimAutomation.ViCore.Types.V1.Tagging.Tag[]]$Tags,
 
-		[Parameter(ParameterSetName="Static")]
 		[Parameter(ParameterSetName="DHCP")]
+		[Parameter(ParameterSetName="Static")]
 		[Switch]$PowerOn,
 
 		[Parameter(ParameterSetName="Static")]
@@ -214,29 +240,34 @@ Function New-IdentityManagerAppliance {
 	)
 
 	Function New-Configuration {
-
 		# Setting the name of the function and invoking opening verbose logging message
 		Write-Verbose -Message (Get-FormattedMessage -Message "$($MyInvocation.MyCommand) Started execution")
-		
+
 		$Status = "Configuring Appliance Values"
 		Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Extracting OVF Template"
 		$ovfconfig = Get-OvfConfiguration -OvF $OVFPath.FullName
 		if ($ovfconfig) {
 			$ApplianceType = (Get-Member -InputObject $ovfconfig.vami -MemberType "CodeProperty").Name
 
+			# Setting Basics Up
+			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Configuring Basic Values"
+			$ovfconfig.Common.varoot_password.value = $RootPassword
+			$ovfconfig.Common.va_ssh_enabled.value = $EnableSSH
+			$ovfconfig.Common.ceip_enabled.value = $EnableCEIP
+
 			# Setting Networking Values
 			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Assigning Networking Values"
-			$ovfconfig.IpAssignment.IpProtocol.Value = $IPProtocol # IP Protocol Value
+			$ovfconfig.IpAssignment.IpProtocol.value = $IPProtocol # IP Protocol Value
 			$ovfconfig.NetworkMapping.Network_1.value = $Network; # vSphere Portgroup Network Mapping
 
 			if ($PsCmdlet.ParameterSetName -eq "Static") {
-				$ovfconfig.vami.$vami.ip0.value = $IPAddress
-				$ovfconfig.vami.$vami.netmask0.value = $SubnetMask
-				$ovfconfig.vami.$vami.gateway.value = $Gateway
-				$ovfconfig.common.vami.hostname.value = $FQDN
-				$ovfconfig.vami.$vami.DNS.value = $DnsServers -join ","
-				if ($DnsSearchPath) { $ovfconfig.vami.$vami.searchpath.value = $DnsSearchPath -join "," }
-				if ($Domain) { $ovfconfig.vami.$vami.domain.value = $Domain }
+				$ovfconfig.Common.vami.hostname.value = $FQDN
+				$ovfconfig.vami.$ApplianceType.ip0.value = $IPAddress
+				$ovfconfig.vami.$ApplianceType.netmask0.value = $SubnetMask
+				$ovfconfig.vami.$ApplianceType.gateway.value = $Gateway
+				$ovfconfig.vami.$ApplianceType.DNS.value = $DnsServers -join ","
+				if ($Domain) { $ovfconfig.vami.$ApplianceType.domain.value = $Domain }
+				if ($DnsSearchPath) { $ovfconfig.vami.$ApplianceType.searchpath.value = $DnsSearchPath -join "," }
             }
 
             # Verbose logging passthrough
@@ -252,8 +283,9 @@ Function New-IdentityManagerAppliance {
 		Write-Verbose -Message (Get-FormattedMessage -Message "$($MyInvocation.MyCommand) Finished execution")
 	}
 
+	# Workflow to provision the vRealize Orchestrator appliance
 	try {
-		$Activity = "Deploying a new Identity Manager Appliance"
+		$Activity = "Deploying a new vRealize Orchestrator Appliance"
 
         # Checking whether a virtual machine already exists in the infrastructure
         Confirm-VM -Name $Name -AllowClobber $AllowClobber -Activity $Activity -Verbose:$VerbosePreference
@@ -266,7 +298,7 @@ Function New-IdentityManagerAppliance {
 
         # Confirming that the requested network name exists and resides on the host that will be used for import
         Confirm-BackingNetwork -Network $Network -VMHost $VMHost -Activity $Activity -Verbose:$VerbosePreference
-		
+
 		# Confirming / Setting Default Gateway
 		$GatewayParams = @{
 			IPAddress = $IPAddress
@@ -315,7 +347,7 @@ Function New-IdentityManagerAppliance {
 				}
 				Import-Appliance @AppliancePayload
 			}
-			
+
 			else { 
 				# Logging out the OVF Configuration values if -WhatIf is invoked
 				if ($VerbosePreference -eq "SilentlyContinue") { Write-OVFValues -ovfconfig $ovfconfig -Type "Standard" }
@@ -329,5 +361,5 @@ Function New-IdentityManagerAppliance {
 }
 
 # Adding aliases and exporting this funtion when the module gets loaded
-New-Alias -Value New-IdentityManagerAppliance -Name New-vIDM
-Export-ModuleMember -Function New-IdentityManagerAppliance -Alias @("New-vIDM")
+New-Alias -Value New-vRealizeOrchestratorAppliance -Name New-vRO
+Export-ModuleMember -Function New-vRealizeOrchestratorAppliance -Alias @("New-vRO")

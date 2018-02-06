@@ -1,6 +1,6 @@
 # OVA/OVF Appliance Import Framework
-  * Version: 0.7.1-BETA
-  * Last Update: 2018-JAN-27
+  * Version: 0.8-BETA
+  * Last Update: 2018-FEB-06
 
 ## General Information
 This module provides a framework to provide a normalized set of parameters to import virtual appliances in OVA or OVF formats into VMware vSphere environments via PowerCLI. In addition to normalized inputs, this framework provides validation of specific infrastructure actions to reduce the possibility of an error:
@@ -26,6 +26,7 @@ For more information about specific appliance options, please use Get-Help <func
 * vRealize Network Insight Platform 3.x
 * vRealize Network Insight Proxy 3.x
 * vRealize Operations 6.x
+* vRealize Orchestrator 7.x
 * vRealize Suite Lifecycle Manager 1.x
 	
 ## Installation Instructions  

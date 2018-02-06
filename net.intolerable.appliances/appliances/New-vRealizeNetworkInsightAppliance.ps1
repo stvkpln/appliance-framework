@@ -82,6 +82,9 @@ Function New-vRealizeNetworkInsightAppliance {
 		.Parameter ProxySharedSecret
 			The shared secret generated on the platform on the onboarding page. This is only applicable to proxy appliances.
 
+		.Parameter Tags
+			Specifies the vSphere Tag(s) to apply to the imported virtual appliance.
+
 		.Parameter PowerOn
 			Specifies whether to power on the imported appliance once the import completes.
 
@@ -262,6 +265,10 @@ Function New-vRealizeNetworkInsightAppliance {
 		# Lifecycle Parameters
 		[Parameter(ParameterSetName="Platform")]
 		[Parameter(ParameterSetName="Proxy")]
+		[VMware.VimAutomation.ViCore.Types.V1.Tagging.Tag[]]$Tags,
+
+		[Parameter(ParameterSetName="Platform")]
+		[Parameter(ParameterSetName="Proxy")]
 		[Switch]$PowerOn,
 
 		[Parameter(ParameterSetName="Platform")]
@@ -372,6 +379,8 @@ Function New-vRealizeNetworkInsightAppliance {
 					Location = $Location
 					Datastore = $Datastore
 					DiskStorageFormat = $DiskFormat
+					Tags = $Tags
+                    Activity = $Activity
 					Verbose = $VerbosePreference
 				}
 				Import-Appliance @AppliancePayload

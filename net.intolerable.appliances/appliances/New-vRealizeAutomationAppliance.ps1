@@ -66,6 +66,9 @@ Function New-vRealizeAutomationAppliance {
 		.Parameter ValidateDns
 			Specifies whether to perform DNS resolution validation of the networking information. If set to true, lookups for both forward (A) and reverse (PTR) records will be confirmed to match.
 
+		.Parameter Tags
+			Specifies the vSphere Tag(s) to apply to the imported virtual appliance.
+
 		.Parameter PowerOn
 			Specifies whether to power on the imported appliance once the import completes.
 
@@ -147,7 +150,7 @@ Function New-vRealizeAutomationAppliance {
 
 		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
-		[bool]$EnableSSH,
+		[bool]$EnableSSH = $false,
 
 		# Infrastructure Parameters
 		[Parameter(ParameterSetName="DHCP")]
@@ -214,6 +217,10 @@ Function New-vRealizeAutomationAppliance {
 		[bool]$ValidateDns = $true,
 
 		# Lifecycle Parameters
+		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
+		[VMware.VimAutomation.ViCore.Types.V1.Tagging.Tag[]]$Tags,
+
 		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
 		[Switch]$PowerOn,
@@ -235,8 +242,8 @@ Function New-vRealizeAutomationAppliance {
 
 			# Setting Basics Up
 			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Configuring Basic Values"
-			$ovfconfig.Common.varoot_password.value = $RootPassword # Setting the provided password for the root account
-			if ($EnableSSH) { $ovfconfig.Common.va_ssh_enabled.value = $EnableSSH }
+			$ovfconfig.Common.varoot_password.value = $RootPassword
+			$ovfconfig.Common.va_ssh_enabled.value = $EnableSSH
 
 			# Setting Networking Values
 			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Assigning Networking Values"
@@ -324,6 +331,8 @@ Function New-vRealizeAutomationAppliance {
 					Location = $Location
 					Datastore = $Datastore
 					DiskStorageFormat = $DiskFormat
+					Tags = $Tags
+                    Activity = $Activity
 					Verbose = $VerbosePreference
 				}
 				Import-Appliance @AppliancePayload
