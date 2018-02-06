@@ -13,6 +13,7 @@ Function Import-Appliance {
 		[VMware.VimAutomation.ViCore.Types.V1.Inventory.VIContainer]$Location,
 		[VMware.VimAutomation.ViCore.Types.V1.DatastoreManagement.Datastore]$Datastore,
         [string]$DiskStorageFormat,
+		[VMware.VimAutomation.ViCore.Types.V1.Tagging.Tag[]]$Tags,
 		[string]$Activity
 	)
 
@@ -35,6 +36,7 @@ Function Import-Appliance {
 	# Deploy the OVF/OVA with the config parameters
 	Write-Progress -Activity $Activity
 	$appliance = Import-VApp @import_params
+	foreach ($Tag in $Tags) { New-TagAssignment -Tag $Tag -Entity $appliance }
 	if ($PowerOn) { Start-VM -VM $appliance }
 	else { Get-VM -Name $Name }
 

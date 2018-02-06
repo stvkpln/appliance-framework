@@ -29,3 +29,10 @@
 # 0.7.1
 * Fixing an issue introduced while working on the plumbing for Pester unit test for `Confirm-VMHost`. Under the new logic, parameters `VMHost` and `Location` will only be passed into the function if they are provided by the wrapper workflow.
 * Fix parameter input from appliance functions to `Import-Appliance` for storage format for VMDK's... oops!
+
+# 0.8
+* Support for vRealize Orchestrator standalone (7.x) appliances!
+* Added support for automatically applying tags to imported appliances with the new `-Tags` parameter
+* Fixed passthrough for `Write-Progress` Activity value when invoking `Import-Appliance`
+* For appliances that supported enabling CEIP, set that value to `true` by default
+* For appliances that support enabling of SSH, changed parameter to a switch and set default value to `false`

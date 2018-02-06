@@ -73,6 +73,9 @@ Function New-vRealizeBusinessAppliance {
 		.Parameter ValidateDns
 			Specifies whether to perform DNS resolution validation of the networking information. If set to true, lookups for both forward (A) and reverse (PTR) records will be confirmed to match.
 
+		.Parameter Tags
+			Specifies the vSphere Tag(s) to apply to the imported virtual appliance.
+
 		.Parameter PowerOn
 			Specifies whether to power on the imported appliance once the import completes.
 
@@ -161,11 +164,11 @@ Function New-vRealizeBusinessAppliance {
 
 		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
-		[bool]$EnableSSH,
-		
+		[Switch]$EnableSSH = $false,
+
 		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
-		[bool]$EnableCEIP,
+		[bool]$EnableCEIP = $true,
 
 		# Infrastructure Parameters
 		[Parameter(ParameterSetName="DHCP")]
@@ -201,7 +204,7 @@ Function New-vRealizeBusinessAppliance {
 
 		[Parameter(ParameterSetName="DHCP")]
 		[Switch]$DHCP,
-		
+
 		[Parameter(Mandatory=$true,ParameterSetName="Static")]
 		[ValidateScript( {$_ -match [IPAddress]$_ })]
 		[String]$IPAddress,
@@ -229,6 +232,10 @@ Function New-vRealizeBusinessAppliance {
 		[bool]$ValidateDns = $true,
 
 		# Lifecycle Parameters
+		[Parameter(ParameterSetName="Static")]
+		[Parameter(ParameterSetName="DHCP")]
+		[VMware.VimAutomation.ViCore.Types.V1.Tagging.Tag[]]$Tags,
+
 		[Parameter(ParameterSetName="DHCP")]
 		[Parameter(ParameterSetName="Static")]
 		[Switch]$PowerOn,
@@ -252,8 +259,8 @@ Function New-vRealizeBusinessAppliance {
 			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Configuring Basic Values"
 			if ($RootPassword) { $ovfconfig.Common.itfm_root_password.value = $RootPassword } # Setting the provided password for the root account
 			if ($Currency) { $ovfconfig.Common.itfm_currency.value = $Currency }
-			if ($EnableSSH) { $ovfconfig.Common.itfm_ssh_enabled.value = $EnableSSH }
-			if ($EnableCEIP) { $ovfconfig.Common.itfm_telemetry_enabled.value = $EnableCEIP }
+			$ovfconfig.Common.itfm_ssh_enabled.value = $EnableSSH
+			$ovfconfig.Common.itfm_telemetry_enabled.value = $EnableCEIP
 
 			# Setting Networking Values
 			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Assigning Networking Values"
@@ -340,6 +347,8 @@ Function New-vRealizeBusinessAppliance {
 					Location = $Location
 					Datastore = $Datastore
 					DiskStorageFormat = $DiskFormat
+					Tags = $Tags
+					Activity = $Activity
 					Verbose = $VerbosePreference
 				}
 				Import-Appliance @AppliancePayload
