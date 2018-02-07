@@ -20,34 +20,45 @@ Function Confirm-VMHost {
 	Write-Verbose -Message (Get-FormattedMessage -Message "$($MyInvocation.MyCommand) Started execution")
 
 	# Error out if there's no host or no resource pool / cluster to find a host for...
-	if (!$VMHost -and !$Location) { 
-		Throw "No infrastructure resource was provided. Please specify either a VMHost (-VMHost) or Infrastructure resource (-Location) to provision the virtual appliance to." 
+	if (!$VMHost -and !$Location) { Throw "No infrastructure resource was provided. Please specify either a VMHost (-VMHost) or Infrastructure resource (-Location) to provision the virtual appliance to." }
+	if($VMHost) { 
+		if(-not (Get-VMHost -Name $VMHost.Name)) { Throw "Can not reach VMHost $($VMHost.Name)" }
 	}
-	if($VMHost){
-		if(-not (Get-VMHost -Name $VMHost.Name)){
-			Throw "Can not reach VMHost $($VMHost.Name)"
-		}
-	}
-	if ($Location) {
-	Write-Verbose "A VMHost was not provided, but a resource location was... the host with the least number of powered on VM's will be selected for provisioning destination."
 
+	# What to do if the Location parameter is provided but a VMHost is not
+	if ($Location -and !$VMHost) {
+		Write-Verbose "A VMHost was not provided, but a resource location was... the host with the least number of powered on VM's will be selected for provisioning destination."
 		$Status = "Getting VMHost for virtual appliance import operation"
 		Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Getting the vSphere Cluster tied to resource location"
-		if($Location -is [VMware.VimAutomation.ViCore.Types.V1.Inventory.Cluster]){
-			$cluster = $Location
+
+		# If the provided location is a vSphere Cluster
+		if ($Location -is [VMware.VimAutomation.ViCore.Types.V1.Inventory.Cluster]) { 
+			$Cluster = $Location
+			Write-Verbose -Message "Location parameter passed in a vSphere Cluster; proceeding with acquiring " 
 		}
-		Else{
-			$cluster = Get-Cluster -Location $Location | Get-Random
+
+		# If the provided location is a vSphere Resource Pool
+		elseif ($Location -is [VMware.VimAutomation.ViCore.Types.V1.Inventory.ResourcePool]) {
+			if ($Location.Parent -is [VMware.VimAutomation.ViCore.Types.V1.Inventory.Cluster]) { $Cluster = $Location.Parent }
+			else { 
+				do { $Location = $Location.Parent }
+				until ($Location -is [VMware.VimAutomation.ViCore.Types.V1.Inventory.Cluster])
+				$Cluster = $Location
+			}
 		}
-		if(-not $cluster){
-			Throw "No cluster provided, or no cluster found under $($Location)"
+	
+		# If it's not a Cluster or Resource Pool..
+        else {
+            $Cluster = Get-Cluster -Location $Location | Sort-Object -Property { (Get-VM -Location $_ | Where-Object { $_.PowerState -eq 'poweredon' }).Count } -Descending |
+			Select-Object -First 1
 		}
-		$esx = Get-VMHost -Location $cluster
-		if(-not $esx){
-			Throw "No ESXi nodes found in cluster $($cluster)"
-		}
-		$VMHost = $esx | 
-			Sort-Object -Property {(Get-VM -VMHost $_ | Where-Object{$_.PowerState -eq 'poweredon'}).Count} -Descending |
+		if(-not $Cluster) { Throw "No cluster provided, or no cluster found under $($Location)"	}
+		
+		# Finding the host with least number of powered on VM's -- thanks to LucD for streamlining this!
+		$VMHosts = Get-VMHost -Location $Cluster
+		if(-not $VMHosts) { Throw "No ESXi Hosts are present in $($Cluster)" }
+		$VMHost = $VMHosts | 
+			Sort-Object -Property { (Get-VM -Location $_ | Where-Object { $_.PowerState -eq 'poweredon' }).Count } -Descending |
 			Select-Object -First 1
 
 		Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Returning the VMHost with the least number of powered on VM's on it"
@@ -55,5 +66,5 @@ Function Confirm-VMHost {
 
 	# Verbose logging output to finish things off
 	Write-Verbose -Message (Get-FormattedMessage -Message "$($MyInvocation.MyCommand) Finished execution")
-	return $VMHost
+	$VMHost
 }

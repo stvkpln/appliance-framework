@@ -1,5 +1,5 @@
 # OVA/OVF Appliance Import Framework
-  * Version: 0.8-BETA
+  * Version: 0.8.1-BETA
   * Last Update: 2018-FEB-06
 
 ## General Information

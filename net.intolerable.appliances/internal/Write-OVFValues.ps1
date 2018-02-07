@@ -8,7 +8,7 @@ Function Write-OVFValues {
 	Write-Verbose -Message (Get-FormattedMessage -Message "$($MyInvocation.MyCommand) Started execution")
 
 	# Converting to a hashtable for easier presentation
-	$ovfvalues = $ovfconfig.ToHashTable()
+	$ovfvalues = $ovfconfig.ToHashTable() | Format-Table -AutoSize
 	
 	# Creating the text that will be outputted to the console
 	$output = "OVF Values are:" + ($ovfvalues | Out-String)
