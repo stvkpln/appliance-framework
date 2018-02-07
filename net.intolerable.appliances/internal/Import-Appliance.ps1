@@ -36,9 +36,11 @@ Function Import-Appliance {
 	# Deploy the OVF/OVA with the config parameters
 	Write-Progress -Activity $Activity
 	$appliance = Import-VApp @import_params
+	
+	# Post Import tasks
 	foreach ($Tag in $Tags) { New-TagAssignment -Tag $Tag -Entity $appliance }
 	if ($PowerOn) { Start-VM -VM $appliance }
-	else { Get-VM -Name $Name }
+    else { $appliance }
 
 	# Verbose logging output to finish things off
 	Write-Verbose -Message (Get-FormattedMessage -Message "$($MyInvocation.MyCommand) Finished execution")

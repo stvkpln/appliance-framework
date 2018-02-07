@@ -36,3 +36,7 @@
 * Fixed passthrough for `Write-Progress` Activity value when invoking `Import-Appliance`
 * For appliances that supported enabling CEIP, set that value to `true` by default
 * For appliances that support enabling of SSH, changed parameter to a switch and set default value to `false`
+
+# 0.8.1
+* Fixes for `Confirm-VMHost` to deal with different types of resources being passed in via the `-Location` parameter; resource pools are not fun.
+* Cleaning up misc. things in the internal functions `Write-OVFValues` and `Import-Appliance`
