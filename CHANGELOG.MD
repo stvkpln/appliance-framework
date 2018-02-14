@@ -40,3 +40,7 @@
 # 0.8.1
 * Fixes for `Confirm-VMHost` to deal with different types of resources being passed in via the `-Location` parameter; resource pools are not fun.
 * Cleaning up misc. things in the internal functions `Write-OVFValues` and `Import-Appliance`
+
+# 0.8.2
+* `New-IdentityManagerAppliance`: Fixes for deployment failures in OVF property configuration
+* `New-IdentityManagerAppliance`: Added options for Enabling/Disabling CEIP and setting Timezone
