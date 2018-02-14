@@ -12,6 +12,14 @@ Function New-IdentityManagerAppliance {
 		.Parameter Name
 			Specifies a name for the imported appliance.
 
+		.Parameter Timezone
+			Configured timezone value. The following are valid options: "Africa/Cairo", "America/Argentina/Buenos_Aires", "America/Caracas", "America/Recife", "Asia/Baku", "Asia/Bangkok", "Asia/Calcutta", "Asia/Dacca", "Asia/Hong_Kong", "Asia/Karachi", "Asia/Tokyo", "Australia/Sydney", "Etc/GMT-1", "Etc/UTC", "Europe/London", "Europe/Moscow", "Europe/Paris", "Pacific/Fiji", "Pacific/Noumea", "Pacific/Samoa", "US/Alaska", "US/Central", "US/Eastern", "US/Hawaii", "US/Mountain", "US/Pacific"
+
+		.Parameter EnableCEIP
+			Specifies whether to enable VMware's Customer Experience Improvement Program ("CEIP"). The default will enable CEIP.
+
+			VMware's Customer Experience Improvement Program ("CEIP") provides VMware with information that enables VMware to improve its products and services, to fix problems, and to advise you on how best to deploy and use our products.  As part of the CEIP, VMware collects technical information about your organization's use of VMware products and services on a regular basis in association with your organization's VMware license key(s). This information does not personally identify any individual. For additional information regarding the data collected through CEIP and the purposes for which it is used by VMware is set forth in the Trust & Assurance Center at http://www.vmware.com/trustvmware/ceip.html.
+
 		.Parameter VMHost
 			Specifies a host where you want to run the appliance.
 
@@ -135,6 +143,15 @@ Function New-IdentityManagerAppliance {
 		[ValidateNotNullOrEmpty()]
 		[String]$Name,
 
+		[Parameter(ParameterSetName="DHCP")]
+		[Parameter(ParameterSetName="Static")]
+		[bool]$EnableCEIP = $true,
+
+		[Parameter(ParameterSetName="DHCP")]
+		[Parameter(ParameterSetName="Static")]
+        [ValidateSet("Africa/Cairo", "America/Argentina/Buenos_Aires", "America/Caracas", "America/Recife", "Asia/Baku", "Asia/Bangkok", "Asia/Calcutta", "Asia/Dacca", "Asia/Hong_Kong", "Asia/Karachi", "Asia/Tokyo", "Australia/Sydney", "Etc/GMT-1", "Etc/UTC", "Europe/London", "Europe/Moscow", "Europe/Paris", "Pacific/Fiji", "Pacific/Noumea", "Pacific/Samoa", "US/Alaska", "US/Central", "US/Eastern", "US/Hawaii", "US/Mountain","US/Pacific")]
+        [string]$Timezone = "Etc/UTC",
+
 		# Infrastructure Parameters
 		[Parameter(ParameterSetName="Static")]
 		[Parameter(ParameterSetName="DHCP")]
@@ -224,19 +241,24 @@ Function New-IdentityManagerAppliance {
 		if ($ovfconfig) {
 			$ApplianceType = (Get-Member -InputObject $ovfconfig.vami -MemberType "CodeProperty").Name
 
+            # Setting Basics Up
+			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Configuring Basic Values"
+			$ovfconfig.Common.ceip.enabled.Value = $EnableCEIP
+			$ovfconfig.Common.vamitimezone.Value = $Timezone
+			
 			# Setting Networking Values
 			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Assigning Networking Values"
 			$ovfconfig.IpAssignment.IpProtocol.Value = $IPProtocol # IP Protocol Value
-			$ovfconfig.NetworkMapping.Network_1.value = $Network; # vSphere Portgroup Network Mapping
+			$ovfconfig.NetworkMapping.Network_1.Value = $Network; # vSphere Portgroup Network Mapping
 
 			if ($PsCmdlet.ParameterSetName -eq "Static") {
-				$ovfconfig.vami.$vami.ip0.value = $IPAddress
-				$ovfconfig.vami.$vami.netmask0.value = $SubnetMask
-				$ovfconfig.vami.$vami.gateway.value = $Gateway
-				$ovfconfig.common.vami.hostname.value = $FQDN
-				$ovfconfig.vami.$vami.DNS.value = $DnsServers -join ","
-				if ($DnsSearchPath) { $ovfconfig.vami.$vami.searchpath.value = $DnsSearchPath -join "," }
-				if ($Domain) { $ovfconfig.vami.$vami.domain.value = $Domain }
+                $ovfconfig.common.vami.hostname.Value = $FQDN
+				$ovfconfig.vami.$ApplianceType.ip0.Value = $IPAddress
+				$ovfconfig.vami.$ApplianceType.netmask0.Value = $SubnetMask
+				$ovfconfig.vami.$ApplianceType.gateway.Value = $Gateway
+				$ovfconfig.vami.$ApplianceType.DNS.Value = $DnsServers -join ","
+				if ($DnsSearchPath) { $ovfconfig.vami.$ApplianceType.searchpath.Value = $DnsSearchPath -join "," }
+				if ($Domain) { $ovfconfig.vami.$ApplianceType.domain.Value = $Domain }
             }
 
             # Verbose logging passthrough
