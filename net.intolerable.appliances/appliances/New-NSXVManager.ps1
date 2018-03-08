@@ -194,7 +194,11 @@ Function New-NSXVManager {
 
 			# Setting Networking Values
 			Write-Progress -Activity $Activity -Status $Status -CurrentOperation "Assigning Networking Values"
-			$ovfconfig.NetworkMapping.VSMgmt.value = $Network; # vSphere Portgroup Network Mapping
+            # Network Backing; the code property changed in 6.4.0... was static in 6.2.x and 6.3.x.
+            $NetworkMapping = (Get-Member -InputObject $ovfconfig.NetworkMapping -MemberType "CodeProperty").Name
+            $ovfconfig.NetworkMapping.$NetworkMapping.value = $Network
+			
+			# IP Networking values
 			$ovfconfig.Common.vsm_ip_0.value = $IPAddress
 			$ovfconfig.Common.vsm_netmask_0.value = $SubnetMask
 			$ovfconfig.Common.vsm_gateway_0.value = $Gateway
@@ -244,22 +248,20 @@ Function New-NSXVManager {
 		$Gateway = Set-DefaultGateway @GatewayParams
 
 		# What to do if a static IP is provided
-		if ($PsCmdlet.ParameterSetName -eq "Static") {
-			# Adding all of the required parameters to validate DNS things
-			$validate = @{
-				Name       = $Name
-				Domain     = $Domain
-				IPAddress  = $IPAddress
-				DnsServers = $DnsServers
-				FQDN       = $FQDN
-				ValidateDns = $ValidateDns
-				Activity = $Activity
-				Verbose    = $VerbosePreference
-			}
-
-			# Confirming DNS Settings
-			$FQDN = Confirm-DNS @validate
+		# Adding all of the required parameters to validate DNS things
+		$validate = @{
+			Name       = $Name
+			Domain     = $Domain
+			IPAddress  = $IPAddress
+			DnsServers = $DnsServers
+			FQDN       = $FQDN
+			ValidateDns = $ValidateDns
+			Activity = $Activity
+			Verbose    = $VerbosePreference
 		}
+
+		# Confirming DNS Settings
+		$FQDN = Confirm-DNS @validate
 
 		# Configuring the OVF Template and deploying the appliance
 		$ovfconfig = New-Configuration
