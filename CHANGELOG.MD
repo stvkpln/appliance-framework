@@ -44,3 +44,7 @@
 # 0.8.2
 * `New-IdentityManagerAppliance`: Fixes for deployment failures in OVF property configuration
 * `New-IdentityManagerAppliance`: Added options for Enabling/Disabling CEIP and setting Timezone
+
+# 0.8.3
+* Fix in `New-NSXVManager` for the code property under the `NetworkMapping` property changing in NSX-V 6.4.0 OVF properties
+* Fix in 'New-NSXVManager` for DNS checking / FQDN that was looking for a parameter set named 'Static'
