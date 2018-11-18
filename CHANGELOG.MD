@@ -48,3 +48,6 @@
 # 0.8.3
 * Fix in `New-NSXVManager` for the code property under the `NetworkMapping` property changing in NSX-V 6.4.0 OVF properties
 * Fix in 'New-NSXVManager` for DNS checking / FQDN that was looking for a parameter set named 'Static'
+
+# 0.8.4
+* New function added for NSX-T: `New-NSXTManager`
