@@ -1,6 +1,6 @@
 # OVA/OVF Appliance Import Framework
-  * Version: 0.8.1-BETA
-  * Last Update: 2018-FEB-06
+  * Version: 0.8.4-BETA
+  * Last Update: 2018-NOV-18
 
 ## General Information
 This module provides a framework to provide a normalized set of parameters to import virtual appliances in OVA or OVF formats into VMware vSphere environments via PowerCLI. In addition to normalized inputs, this framework provides validation of specific infrastructure actions to reduce the possibility of an error:
@@ -19,6 +19,7 @@ For more information about specific appliance options, please use Get-Help <func
 
 ## Current Appliances Supported:
 * Identity Manager 2.9.x
+* NSX-T Manager 2.x
 * NSX-V Manager 6.3.x
 * vRealize Automation 7.x
 * vRealize Business 7.x
@@ -28,12 +29,12 @@ For more information about specific appliance options, please use Get-Help <func
 * vRealize Operations 6.x
 * vRealize Orchestrator 7.x
 * vRealize Suite Lifecycle Manager 1.x
-	
-## Installation Instructions  
+
+## Installation Instructions
 Clone the repository to the local machine and copy the 'net.intolerable.appliances' to a module directory specified in the environmental path. To review which paths have been specified in the current environment:
-`[Environment]::GetEnvironmentVariable("PSModulePath")`  
+`[Environment]::GetEnvironmentVariable("PSModulePath")`
 `$Env:PSModulePath`
 
-Alternatively, if you don't want to maintain the github repo separately from your preferred PowerShell module path... then you can create a symlink.. All you need to do is start up an administrator-elevated PowerShell session and enter the following:
+Alternatively, if you don't want to maintain the GitHub repo separately from your preferred PowerShell module path... then you can create a symlink.. All you need to do is start up an administrator-elevated PowerShell session and enter the following:
 
 `New-Item -ItemType SymbolicLink -Name <path-to-powershell-module-location>\net.intolerable.appliances -Target <path-to-module-local-repo>\net.intolerable.appliances`
